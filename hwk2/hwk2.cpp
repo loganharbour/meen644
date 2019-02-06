@@ -1,7 +1,7 @@
 #include "TriDiagonal.h"
 #include <time.h>
-
 #include <math.h>
+#include <string>
 
 void saveCsv(std::vector<double> x, std::string filename)
 {
@@ -14,17 +14,18 @@ void saveCsv(std::vector<double> x, std::string filename)
 
 void solveRod(unsigned int N)
 {
-	double L = 1.0; // [cm]
+	double L = 1; // [cm]
 	double dx = L / N; // [cm]
 	double diameter = 0.05; // [cm]
-	double k = 400.0;
-	double T1 = 100.0; // [C]
+	double k = 4.0; // [W/cm-C]
+	double T0 = 100.0; // [C]
 	double Tinf = 25.0; // [C]
 	double h = 0.5; // [W/m^2-C]
  	double m = 0.5 * h * diameter;
 
-	TriDiagonal M(N - 1);
+	TriDiagonal A(N - 1);
 	std::vector<double> x(N - 1);
+	std::vector<double> T(N);
 	std::vector<double> b(N - 1);
 
 	// These coefficients are constant in space
@@ -33,24 +34,31 @@ void solveRod(unsigned int N)
 	double a_e = 1.0 / dx;
 
 	// Left control volume
-	M.setTopRow(a_p, -a_e);
-	b[0] = a_w * T1;
+	A.setTopRow(a_p, -a_e);
+	b[0] = a_w * (T0 - Tinf);
 	// Interior control volumes
-	for (unsigned int i = 1; i < N - 1; ++i)
-		M.setMiddleRow(i, -a_w, a_p, -a_e);
+	for (unsigned int i = 1; i < N - 2; ++i)
+		A.setMiddleRow(i, -a_w, a_p, -a_e);
 	// Right control volume
-	M.setBottomRow(-1, 1 - h * dx / (2 * k));
+	A.setBottomRow(-1, 1 + h * dx / (2 * k));
 
-	M.solveTDMA(b, x);
+	A.solveTDMA(b, x);
+
+	T[0] = T0;
 	for (unsigned int i = 0; i < x.size(); ++i)
-		x[i] -= Tinf;
-	saveCsv(x, "test.csv");
-
+		T[i + 1] = x[i] + Tinf;
+	saveCsv(T, "result_" + std::to_string(N) + ".csv");
 }
 
 int main()
 {
-	solveRod(100);
+	solveRod(6);
+	solveRod(11);
+	solveRod(21);
+	solveRod(41);
+	solveRod(81);
+	solveRod(10000);
+	solveRod(100000);
 
 	return 0;
 }

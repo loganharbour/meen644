@@ -63,34 +63,6 @@ public:
 			x[i] = b[i] - _T[i * 3 + 1] * x[i + 1];
 	}
 
-	void save(std::string filename)
-	{
-		std::ofstream f;
-		f.open(filename);
-		f << std::setprecision(12) << _T[0] << "," << std::setprecision(12) << _T[1];
-		for (unsigned int i = 2; i < _N; ++i)
-			f << ",0";
-		f << std::endl;
-		for (unsigned int i = 1; i < _N - 1; ++i)
-		{
-			for (unsigned int j = 0; j < i - 1; ++j)
-				f << "0,";
-			f << std::setprecision(12) << _T[i * 3 - 1] << ",";
-			f << std::setprecision(12) << _T[i * 3] << ",";
-			f << std::setprecision(12) << _T[i * 3 + 1];
-			for (unsigned int j = i + 2; j < _N; ++j)
-				f << ",0";
-			f << std::endl;
-		}
-		for (unsigned int i = 0; i < _N - 2; ++i)
-			f << "0,";
-		f << std::setprecision(12) << _T[_N * 3 - 4] << "," << std::setprecision(12) << _T[_N * 3 - 3];
-		f.close();
-	}
-
-	const unsigned int N() { return _N; }
-	const std::vector<double> & T() { return _T; }
-
 protected:
 	// Matrix size
 	unsigned int _N;

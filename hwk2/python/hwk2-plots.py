@@ -6,9 +6,13 @@ plt.rc('font', family='serif')
 
 # Load results
 T = {}
-nodes = [6, 11, 21, 41, 81]
+Tinf = 25
+T0 = 100
+nodes = [81, 41, 21, 11, 6]
 for N in nodes:
-    T[N] = np.loadtxt('../results/result_{}.csv'.format(N))
+    # Remember to add Tinf to all theta and append T0 to the first
+    T[N] = np.loadtxt('../results/theta_{}.csv'.format(N)) + Tinf
+    T[N] = np.insert(T[N], 0, T0)
 
 # Plot results
 fig = plt.figure()

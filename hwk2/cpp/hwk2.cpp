@@ -5,7 +5,10 @@
 #include <math.h>
 #include <string>
 
-void saveCsv(std::vector<double> x, std::string filename)
+/**
+ * Saves a vector to a csv.
+ */
+void saveCsv(const std::vector<double> x, const std::string filename)
 {
 	std::ofstream f;
 	f.open(filename);
@@ -14,16 +17,19 @@ void saveCsv(std::vector<double> x, std::string filename)
 	f.close();
 }
 
+/**
+ * Solves the 1D heat-conduction (with convection) problem with N nodes.
+ */
 void solveRod(unsigned int N)
 {
 	// Initialize geometry and material properties
-	double L = 1;       // [m]
-	double dx = L / N;  // [m]
-	double r = 0.025;   // [m]
-	double k = 400.0;   // [W/m-C]
-	double h = 0.5;     // [W/m^2-C]
-	double T0 = 100.0;  // [C]
-	double Tinf = 25.0; // [C]
+	double L = 1;             // [m]
+	double dx = L / (N - 1);  // [m]
+	double d = 0.05;          // [m]
+	double k = 400.0;         // [W/m-C]
+	double h = 0.5;           // [W/m^2-C]
+	double T0 = 100.0;        // [C]
+	double Tinf = 25.0;       // [C]
 
 	// Initialize system A theta = b
 	TriDiagonal A(N - 1);
@@ -31,7 +37,8 @@ void solveRod(unsigned int N)
 	std::vector<double> b(N - 1);
 
 	// Constant coefficients
-	double a_p = 2.0 * h * dx / (k * r) + 2.0 / dx;
+	double m = h / (k * d);
+	double a_p = m * dx + 2.0 / dx;
 	double a_w = 1.0 / dx;
 	double a_e = 1.0 / dx;
 
@@ -40,21 +47,16 @@ void solveRod(unsigned int N)
 	b[0] = a_w * (T0 - Tinf);
 	for (unsigned int i = 1; i < N - 2; ++i)
 		A.setMiddleRow(i, -a_w, a_p, -a_e);
-	A.setBottomRow(-1, 1 + h * dx / (2 * k));
+	A.setBottomRow(-a_w, m * dx / 2 + h / k + a_e);
 
-	// Solve system in place
+	// Solve system in place and save
 	A.solveTDMA(b, theta);
-
-	// Add in Dirichlet left node and save to csv
-	std::vector<double> T(N);
-	T[0] = T0;
-	for (unsigned int i = 0; i < theta.size(); ++i)
-		T[i + 1] = theta[i] + Tinf;
-	saveCsv(T, "../results/result_" + std::to_string(N) + ".csv");
+	saveCsv(theta, "../results/theta_" + std::to_string(N) + ".csv");
 }
 
 int main()
 {
+	// Run each requested case
 	solveRod(6);
 	solveRod(11);
 	solveRod(21);

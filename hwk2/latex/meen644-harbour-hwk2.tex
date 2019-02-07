@@ -60,56 +60,57 @@ Consider one-dimensional heat conduction in a cylindrical copper rod of length 1
 With one-dimensional heat conduction with convection and constant material properties, we have the ODE:
 \begin{equation}
 	\begin{cases}
-		kA \dv{^2T}{x^2} + h p (T - T_\infty) = 0\,,\\
+		\dv{^2T}{x^2} + \frac{h}{kd} (T - T_\infty) = 0\,,\\
 		T(0) = T_0\,,\\
-		\dv{T}{x} \Big|_{x = 1~\text{m}} = - \frac{k}{h} (T - T_\infty)\,,
+		\dv{T}{x} \big|_{x = L} = - \frac{h}{k} (T - T_\infty)\,,
 	\end{cases}
 \end{equation}
 where
 \begin{align*}
-	k & \equiv 400~\text{W/m}~^\circ\text{C}\,, & h & \equiv 0.5~\text{W/m}^2~^\circ\text{C}\,, & A & \equiv 0.25^2 \pi~\text{m}\,,\\
-	p & \equiv 0.5 \pi~\text{m}\,, & T_0 & \equiv 100~^\circ\text{C}\,, & T_\infty & \equiv 25~^\circ\text{C}\,.\\ 
+	k & \equiv 400~\text{W/m}~^\circ\text{C}\,, & h & \equiv 0.5~\text{W/m}^2~^\circ\text{C}\,, & d & \equiv 0.05~\text{m}\,,\\
+	L & \equiv 1.0~\text{m}\,, & T_0 & \equiv 100~^\circ\text{C}\,, & T_\infty & \equiv 25~^\circ\text{C}\,.\\ 
 \end{align*}
-
-We then make the substitution $\theta(x) = T(x) - T_\infty$ to obtain the simplification
+We then make the substitutions $\theta(x) = T(x) - T_\infty$ and $m = h/kd$ to obtain the simplification
 \begin{equation}
 	\begin{cases}
-		kA \dv{^2\theta}{x^2} + h p \theta = 0\,,\\
+		\dv{^2\theta}{x^2} + m \theta = 0\,,\\
 		\theta(0) = T_0 - T_\infty\,,\\
-		\dv{\theta}{x} \Big|_{x = 1~\text{m}} = - \frac{k}{h} \theta\,.
+		\dv{\theta}{x} \big|_{x = L} = - \frac{h}{k} \theta\,.
 	\end{cases}
 	\end{equation}
 	
-\subsection*{Discretization}
+\subsection*{Grid generation}
 
-We discretize the region on $x = [0, L]$ by $N$ (also defined as ITMAX) nodes and $N - 1$ control volumes, as follows in Figure \ref{fig:CVs}.
+We discretize the region on $x = [0, L]$ by $N$ (also defined as ITMAX) nodes and $N$ control volumes, as follows in Figure \ref{fig:CVs} with $\Delta x = L / (N - 1)$.
 
 \begin{figure}[H]
 	\centering
-	\begin{subfigure}[t]{0.3\textwidth}
+	\begin{subfigure}[t]{0.32\textwidth}
+		\centering
 		\begin{tikzpicture}[scale=2]
 			\tikzset{dimen/.style={<->,>=latex,thin,every rectangle node/.style={fill=white,midway,font=\small}}}
 			
-			\draw (0,0) -- (2,0);
+			\draw (0,0) -- (1.5, 0);
 			
-			\draw (1.5, -0.1) -- (1.5, 0.1);
-				
-			\foreach \i in {0, 1, 2}
+			\foreach \i in {0, 0.5, 1.5}
+				\draw (\i, -0.1) -- (\i, 0.1);
+			
+			\foreach \i in {0, 1}
 				\filldraw (\i, 0) circle (0.75pt);
 				
-			\node[below] at (0, 0) {$\theta_1$};
-			\node[below] at (1, 0) {$\theta_2$};
-			\node[below] at (2, 0) {$\theta_3$};
-			\node[below] at (1.5, -0.1) {$e(1)$};
-			\node[above] at (0.75, 0.4) {CV$_1$};
+			\node[below] at (0, -0.05) {$\theta_1$};
+			\node[below] at (1, -0.05) {$\theta_2$};
+			\node[above] at (0.25, 0.4) {CV$_1$};
+			\node[above] at (1, 0.4) {CV$_2$};
 			
-			\draw [dimen] (0, 0.25) -- (1.5, 0.25) node {$\frac{3}{2} \Delta x$};
-			\draw [dimen] (0, -0.5) -- (1.0, -0.5) node {$\Delta x$};
-			\draw [dimen] (1.0, -0.5) -- (2.0, -0.5) node {$\Delta x$};
+			\draw [dimen] (0.5, 0.25) -- (1.5, 0.25) node {$\Delta x$};
+			\draw [dimen] (0.0, -0.5) -- (1.0, -0.5) node {$\Delta x$};
 		\end{tikzpicture}
 		\caption{Left CV}
 	\end{subfigure}
-	\begin{subfigure}[t]{0.3\textwidth}
+	\hfill
+	\begin{subfigure}[t]{0.32\textwidth}
+		\centering
 		\begin{tikzpicture}[scale=2]
 			\tikzset{dimen/.style={<->,>=latex,thin,every rectangle node/.style={fill=white,midway,font=\small}}}
 			
@@ -121,39 +122,43 @@ We discretize the region on $x = [0, L]$ by $N$ (also defined as ITMAX) nodes an
 			\foreach \i in {0, 1, 2}
 			\filldraw (\i, 0) circle (0.75pt);
 			
-			\node[below] at (0, 0) {$\theta_{i-1}$};
-			\node[below] at (1, 0) {$\theta_i$};
-			\node[below] at (2, 0) {$\theta_{i+1}$};
+			\node[below] at (0, -0.05) {$\theta_{i-1}$};
+			\node[below] at (1, -0.05) {$\theta_i$};
+			\node[below] at (2, -0.05) {$\theta_{i+1}$};
 			\node[below] at (1.5, -0.1) {$e(i)$};
 			\node[below] at (0.5, -0.1) {$w(i)$};
 			\node[above] at (1.0, 0.4) {CV$_i$};
+			\node[above] at (0.25, 0.4) {CV$_{i-1}$};
+			\node[above] at (1.75, 0.4) {CV$_{i+1}$};
 			
 			\draw [dimen] (0.5, 0.25) -- (1.5, 0.25) node {$\Delta x$};
 			\draw [dimen] (0, -0.5) -- (1.0, -0.5) node {$\Delta x$};
 			\draw [dimen] (1, -0.5) -- (2.0, -0.5) node {$\Delta x$};
 		\end{tikzpicture}
-		\caption{Interior CV ($1 < i < N - 1)$}
+		\caption{Interior CV ($1 < i < N$)}
 	\end{subfigure}
-	\begin{subfigure}[t]{0.3\textwidth}
+	\hfill
+	\begin{subfigure}[t]{0.32\textwidth}
+		\centering
 		\begin{tikzpicture}[scale=2]
 			\tikzset{dimen/.style={<->,>=latex,thin,every rectangle node/.style={fill=white,midway,font=\small}}}
 			
-			\draw (0,0) -- (2,0);
+			\draw (0,0) -- (1.5,0);
 			
-			\draw (0.5, -0.1) -- (0.5, 0.1);
+			\foreach \i in {0, 1, 1.5}
+				\draw (\i, -0.1) -- (\i, 0.1);
 			
-			\foreach \i in {0, 1, 2}
-			\filldraw (\i, 0) circle (0.75pt);
+			\foreach \i in {0.5, 1.5}
+				\filldraw (\i, 0) circle (0.75pt);
 			
-			\node[below] at (0, 0) {$\theta_{N-1}$};
-			\node[below] at (1, 0) {$\theta_{N}$};
-			\node[below] at (2, 0) {$\theta_{N+1}$};
-			\node[below] at (0.5, -0.1) {$w(i)$};
-			\node[above] at (1.25, 0.4) {CV$_{N-1}$};
+			\node[below] at (0.5, -0.05) {$\theta_{N-1}$};
+			\node[below] at (1.5, -0.05) {$\theta_N$};
+			\node[above] at (1.25, 0.4) {CV$_N$};
+			\node[above] at (0.5, 0.4) {CV$_{N-1}$};
+			\node[below] at (1.0, -0.1) {$w(N)$};
 			
-			\draw [dimen] (0.5, 0.25) -- (2, 0.25) node {$\frac{3}{2} \Delta x$};
-			\draw [dimen] (0, -0.5) -- (1.0, -0.5) node {$\Delta x$};
-			\draw [dimen] (1.0, -0.5) -- (2.0, -0.5) node {$\Delta x$};
+			\draw [dimen] (0.5, 0.25) -- (1.5, 0.25) node {$\Delta x$};
+			\draw [dimen] (0.0, -0.5) -- (1.0, -0.5) node {$\Delta x$};
 		\end{tikzpicture}
 		\caption{Right CV}
 	\end{subfigure}
@@ -161,61 +166,48 @@ We discretize the region on $x = [0, L]$ by $N$ (also defined as ITMAX) nodes an
 	\label{fig:CVs}
 \end{figure}
 
+\subsection*{Equation discretization}
+
 \subsubsection*{Internal control volume equation}
 
 We start with the integration over an interior control volume, as
 \[
-	\int_{\text{CV}_i} \left[ -\dv{^2\theta}{x^2} + \frac{hp}{kA} \theta \right] dx = 0\,, \quad 1 < i < N - 1\,,
+	\int_{\text{CV}_i} \left[ -\dv{^2\theta}{x^2} + m \theta \right] dx = 0\,, \quad 1 < i < N\,,
 \]
-in which we know that the material properties are independent, to obtain
+in which we know that the material properties are independent and we assume $\theta_i$ to be constant over the cell for the second term to obtain
 \[
-	- \left( \dv{\theta}{x}\Big|_{e(i)} - \dv{\theta}{x}\Big|_{w(i)} \right) + \frac{hp\Delta x}{kA} \theta_i = 0\,, \quad 1 < i < N - 1\,.
+	- \left( \dv{\theta}{x}\Big|_{e(i)} - \dv{\theta}{x}\Big|_{w(i)} \right) + m \Delta x \theta_i = 0\,, \quad 1 < i < N\,.
 \]
 Use the two node formulation for the derivative terms and simplify as
+\begin{align*}
+	- \left( \frac{\theta_{i+1} - \theta_i}{\Delta x} - \frac{\theta_i - \theta_{i - 1}}{\Delta x} \right) + m \Delta x \theta_i & = 0 \,, \quad 1 < i < N\,, \\
+	- \frac{1}{\Delta x} \theta_{i-1} + \left(m \Delta x + \frac{2}{\Delta x}\right) \theta_i - \frac{1}{\Delta x} \theta_{i+1} & = 0\,, \quad 1 < i < N\,.
+\end{align*}
+Take note that at the $i = 2$ equation, $\theta_1$ is known therefore we have
 \begin{align}
-	- \left( \frac{\theta_{i+1} - \theta_i}{\Delta x} - \frac{\theta_i - \theta_{i - 1}}{\Delta x} \right) + \frac{hp\Delta x}{kA} \theta_i & = 0 \,, \quad 1 < i < N - 1\,,\nonumber \\
-	- \frac{1}{\Delta x} \theta_{i-1} + \left(\frac{h p \Delta x}{kA} + \frac{2}{\Delta x}\right) \theta_i - \frac{1}{\Delta x} \theta_{i+1} & = 0\,, \quad 1 < i < N - 1\,.
-	\label{eq:int_cv}
+	\Aboxed{\left(m \Delta x + \frac{2}{\Delta x}\right) \theta_2 - \frac{1}{\Delta x} \theta_3 & = \frac{T_0 - T_\infty}{\Delta x}\,,}\\
+	\Aboxed{- \frac{1}{\Delta x} \theta_{i-1} + \left(m \Delta x + \frac{2}{\Delta x}\right) \theta_i - \frac{1}{\Delta x} \theta_{i+1} & = 0\,, \quad 2 < i < N\,.}
 \end{align}
 
-\subsubsection*{Left boundary control volume equation}
+\subsubsection*{Right control volume equation}
 
-Utilize Equation \ref{eq:int_cv} for $i = 1$ with a known value of $\theta_1 = T_0 - T_\infty$ to obtain
-\begin{equation}
-	\left(\frac{h p \Delta x}{kA} + \frac{2}{\Delta x}\right) \theta_1 - \frac{1}{\Delta x} \theta_2 = \frac{1}{\Delta x} (T_0 - T_\infty)\,.
-	\label{eq:int_leftcv}
-\end{equation}
-
-\subsubsection*{Right boundary control volume equation}
-
-At the right boundary we have
+We start with the integration over the right control volume, CV$_N$, as
 \[
-	\dv{\theta}{x} \Big|_{x = 1~\text{m}} = - \frac{k}{h} \theta\,.
+	\int_{\text{CV}_N} \left[ -\dv{^2\theta}{x^2} + m \theta \right] dx = 0\,,
 \]
-
-Use a backward difference for the derivative term to obtain
+in which for the second term we will assume $\theta_N$ to be constant over CV$_N$ to obtain
+\[
+	- \left( \dv{\theta}{x}\Big|_{x = L} - \dv{\theta}{x}\Big|_{w(N)} \right) + \frac{1}{2} m \Delta x \theta_N = 0\,.
+\]
+Use the two node formulation for the derivative term at $w(N)$ and the right boundary condition for the derivative term at $x = L$ m to obtain
 \begin{align}
-	\frac{\theta_{N+1} - \theta_N}{\frac{1}{2}\Delta x} & = - \frac{h}{k} \theta_{N+1}\,,\nonumber \\
-	-\theta_N + \left(1 + \frac{h \Delta x}{2k}\right) \theta_{N+1} & = 0\,.
-	\label{eq:int_rightcv}
+	\frac{h}{k} \theta_N + \frac{\theta_N - \theta_{N-1}}{\Delta x} + \frac{1}{2} m \Delta x \theta_N & = 0\,,\nonumber\\
+	\Aboxed{- \frac{1}{\Delta x} \theta_{N-1} + \left(\frac{1}{2} m \Delta x + \frac{h}{k} + \frac{1}{\Delta x}\right) \theta_N & = 0\,.}
 \end{align}
-
-\subsubsection*{Simplified control volume equations}
-
-First, define
-\[
-	a_w = a_e = \frac{1}{\Delta x} \quad \text{and} \quad a_p = \frac{h p \Delta x}{kA} + \frac{2}{\Delta x}\,,
-\]
-in which we are then solving the system 
-\begin{equation}
-	\begin{cases}
-		a_p \theta_1 - a_e \theta_2 = a_w (T_0 - T_\infty)\,, \\
-		a_w \theta_{i - 1} - a_p \theta_i + a_e \theta_{i+1} = 0\,, & 1 < i < N - 1\,,\\
-		-\theta_N + \left(1 + \frac{h \Delta x}{2k}\right) \theta_{N+1} = 0\,.
-	\end{cases}
-\end{equation}
 
 \section*{Results}
+
+The plotted results as requested follow below in Figure \ref{fig:results}.
 
 \begin{figure}[H]
 	\centering

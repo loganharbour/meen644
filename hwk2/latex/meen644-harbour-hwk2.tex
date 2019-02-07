@@ -8,7 +8,6 @@
 \usepackage{amssymb} % Extended symbol collection
 \usepackage{tikz} % Graphical element creation
 \usetikzlibrary{automata,positioning}
-\usepackage[plain]{algorithm} % Float wrapper for algorithms
 \usepackage{algpseudocode} % Algorithm layout
 \usepackage{enumitem} % Enumerate (lists)
 \usepackage{ragged2e} % Alternative alignment
@@ -31,6 +30,7 @@
 \usepackage[cache=false]{minted}
 \usepackage{subcaption}
 \renewcommand{\MintedPygmentize}{/Users/loganharbour/miniconda/bin/pygmentize}
+\usepackage[]{algorithm2e}
 
 \setlength\parindent{0pt} % No indents
 \setlength{\parskip}{1em} % Paragraph skip
@@ -55,9 +55,9 @@ Consider one-dimensional heat conduction in a cylindrical copper rod of length 1
 
 \section*{Preliminaries}
 
-\subsection*{ODE definition}
+\subsection*{One-dimensional heat conduction}
 
-With one-dimensional heat conduction with convection and constant material properties, we have the ODE:
+With one-dimensional heat conduction with convection and constant material properties, we have the ODE
 \begin{equation}
 	\begin{cases}
 		\dv{^2T}{x^2} + \frac{h}{kd} (T - T_\infty) = 0\,,\\
@@ -204,6 +204,50 @@ Use the two node formulation for the derivative term at $w(N)$ and the right bou
 	\frac{h}{k} \theta_N + \frac{\theta_N - \theta_{N-1}}{\Delta x} + \frac{1}{2} m \Delta x \theta_N & = 0\,,\nonumber\\
 	\Aboxed{- \frac{1}{\Delta x} \theta_{N-1} + \left(\frac{1}{2} m \Delta x + \frac{h}{k} + \frac{1}{\Delta x}\right) \theta_N & = 0\,.}
 \end{align}
+
+\subsection*{TDMA}
+
+The system we are solving is of the form
+\renewcommand*{\arraystretch}{1.3}
+\[
+	\begin{bmatrix}
+		b_1 & c _1 & & & 0 \\
+		a_2 & b_2 & c_2 \\
+		& a_3 & b_3 & \ddots & \\
+		& & \ddots & \ddots & c_{n - 1} \\
+		0 & & & a_n & b_n
+	\end{bmatrix}
+	\begin{bmatrix}
+		x_1 \\
+		x_2 \\
+		x_3 \\
+		\vdots \\
+		x_n
+	\end{bmatrix}
+	=
+	\begin{bmatrix}
+		d_1 \\
+		d_2 \\
+		d_3 \\
+		\vdots \\
+		d_n
+	\end{bmatrix}\,.
+\]
+We will solve this system using the tridiagonal matrix algorithm (TDMA) given the fact that our system is positive definite. With our matrix in the form above, the algorithm follows in Algorithm \ref{alg:tdma}.
+
+\begin{algorithm}[H]
+	\For{$i = 2, 3, \ldots, n$}{
+		$w = a_i / b_{i - 1}$\;
+		$b_i = b_i - w c_{i - 1}$\;
+		$d_i = d_i - w d_{i - 1}$\;
+	}
+	$x_n = d_n / b_n$\;
+	\For{$i = n - 1, n - 2, \ldots, 1$}{
+		$x_i = (d_i - c_i x_{i + 1}) / b_i$\;
+	}
+	\caption{The tridiagonal matrix algorithm (TDMA).}
+	\label{alg:tdma}
+\end{algorithm}
 
 \section*{Results}
 

@@ -13,7 +13,7 @@ void solveRod(unsigned int N) {
       h = 0.5,          // [W/m^2-C]
       T0 = 100.0,       // [C]
       Tinf = 25.0,      // [C]
-      m = h / (k * d),
+      m = 4.0 * h / (k * d),
       a_p = m * dx + 2.0 / dx,
       a_w = 1.0 / dx,
       a_e = 1.0 / dx;

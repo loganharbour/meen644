@@ -16,7 +16,7 @@ int main() {
     auto center = (N - 1) / 2;
     Conduction2D problem(N, N, 1.2);
     problem.run();
-    std::cout << "  Center solution = " << std::setprecision(6)
+    std::cout << "  Center solution = " << std::setprecision(10)
               << problem.getT()(center, center) << " C" << std::endl;
 
     // Problem 3

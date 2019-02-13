@@ -17,8 +17,7 @@ Conduction2D::Conduction2D(unsigned int Nx, unsigned int Ny, double w,
       // Relaxation coefficient and iteration tolerance
       w_inv(1.0 / w), tol(tol), max_its(max_its),
       // Initialize matrices and vectors
-      // T(Nx, Ny, (T_L + T_T + T_B) / 3.0)
-      T(Nx, Ny, 0), pre_A_x(Ny, Nx), pre_A_y(Ny, Nx),
+      T(Nx, Ny, (T_L + T_T + T_B) / 3.0), pre_A_x(Ny, Nx), pre_A_y(Ny, Nx),
       pre_b_x(Ny), pre_b_y(Nx), A_x(Nx), A_y(Ny), b_x(Nx), b_y(Ny) {}
 
 void Conduction2D::run() {

@@ -6,7 +6,7 @@ plt.rc('font', family='serif')
 
 # Problem a
 alpha = [1.00, 1.05, 1.10, 1.15, 1.20, 1.25, 1.30, 1.35]
-iterations = [111, 92, 75, 50, 46, 35, 26, 42]
+iterations = [98, 81, 66, 53, 41, 32, 25, 45]
 fig = plt.figure()
 fig.set_figwidth(9)
 fig.set_figheight(4)

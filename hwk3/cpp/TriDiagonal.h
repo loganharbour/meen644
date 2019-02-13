@@ -13,7 +13,7 @@ public:
       : N(N), A(N, val), B(N, val), C(N - 1, val) {}
 
   // Gets the value of the (i, j) entry
-  const double operator()(unsigned int i, unsigned int j) {
+  const double operator()(unsigned int i, unsigned int j) const {
     assert(i < N && j > i - 2 && j < i + 2);
     if (j == i - 1)
       return A[i];
@@ -43,20 +43,6 @@ public:
     B[N - 1] += b;
   }
 
-  // Adders for the left, main, and right diagonals
-  void addLeft(unsigned int i, double val) {
-    assert(i < N && i != 0);
-    A[i] += val;
-  }
-  void addMain(unsigned int i, double val) {
-    assert(i < N);
-    B[i] += val;
-  }
-  void addRight(unsigned int i, double val) {
-    assert(i < N - 1);
-    C[i] += val;
-  }
-
   void copyFrom(TriDiagonal &from) {
     assert(from.getN() == N);
     A.assign(from.getA().begin(), from.getA().end());
@@ -64,9 +50,11 @@ public:
     C.assign(from.getC().begin(), from.getC().end());
   }
 
-  const std::vector<double> &getA() { return A; }
-  const std::vector<double> &getB() { return B; }
-  const std::vector<double> &getC() { return C; }
+  // Getters for the raw vectors
+  const std::vector<double> &getA() const { return A; }
+  const std::vector<double> &getB() const { return B; }
+  const std::vector<double> &getC() const { return C; }
+
   unsigned int getN() { return N; }
 
   // Solves the system Ax = d in place where d eventually stores the solution

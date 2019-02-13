@@ -10,6 +10,10 @@ public:
   Matrix(unsigned int Nx, unsigned int Ny, double val = 0)
       : Nx(Nx), Ny(Ny), M(Nx, std::vector<double>(Ny, val)) {}
 
+  const double &operator()(unsigned int i, unsigned int j) const {
+    assert(i < Nx && j < Ny);
+    return M[i][j];
+  }
   double &operator()(unsigned int i, unsigned int j) {
     assert(i < Nx && j < Ny);
     return M[i][j];

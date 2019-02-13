@@ -36,8 +36,6 @@ void Conduction2D::run() {
   }
 }
 
-void Conduction2D::save(std::string filename) { T.save(filename); }
-
 void Conduction2D::precomputeProperties() {
   // Set all neighbors to the default at first
   a_n = k * dx / dy;
@@ -45,12 +43,11 @@ void Conduction2D::precomputeProperties() {
   a_s = k * dx / dy;
   a_w = k * dy / dx;
 
-  // Boundary conditions
-  // Top dirichlet
+  // Top Dirichlet
   a_n.setRow(Ny - 1, 2 * k * dx / dy);
   // Right Neumann
   a_e.setColumn(Nx - 1, 0);
-  // Bottom dirichlet
+  // Bottom Dirichlet
   a_s.setRow(0, 2 * k * dx / dy);
   // Left dirichlet
   a_w.setColumn(0, 2 * k * dy / dx);
@@ -129,7 +126,6 @@ void Conduction2D::solveRow(unsigned int j) {
   // Relax, solve, and store solution (which is in b_x)
   for (unsigned int i = 0; i < Nx; ++i)
     b_x[i] += (w_inv - 1.0) * a_p(i, j) * T(i, j);
-
   A_x.solveTDMA(b_x);
   T.setRow(j, b_x);
 }
@@ -150,7 +146,6 @@ void Conduction2D::solveColumn(unsigned int i) {
   // Relax, solve, and store solution (which is in b_y)
   for (unsigned int j = 0; j < Ny; ++j)
     b_y[j] += (w_inv - 1.0) * a_p(i, j) * T(i, j);
-
   A_y.solveTDMA(b_y);
   T.setColumn(i, b_y);
 }
@@ -170,17 +165,21 @@ void Conduction2D::sweep() {
     solveColumn(i);
 }
 
-double Conduction2D::computeResidual() {
+double Conduction2D::computeResidual() const {
   double R = 0.0, val = 0.0;
   for (unsigned int i = 0; i < Nx; ++i)
     for (unsigned int j = 0; j < Ny; ++j) {
       val = a_p(i, j) * T(i, j) - pre_b_y[i][j];
+      // Not on left boundary
       if (i > 0)
         val -= a_w(i, j) * T(i - 1, j);
+      // Not on right boundary
       if (i < Nx - 1)
         val -= a_e(i, j) * T(i + 1, j);
+      // Not on bottom boundary
       if (j > 0)
         val -= a_s(i, j) * T(i, j - 1);
+      // Not top boundary
       if (j < Ny - 1)
         val -= a_n(i, j) * T(i, j + 1);
       R += std::abs(val);

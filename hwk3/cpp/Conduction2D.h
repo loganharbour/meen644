@@ -17,21 +17,25 @@ public:
                unsigned int max_its = 1000);
 
   void run();
-  void save(std::string filename);
 
   unsigned int getNx() { return Nx; }
   unsigned int getNy() { return Ny; }
-  Matrix & getT() { return T; }
+  const Matrix & getT() const { return T; }
+  void save(std::string filename) const { T.save(filename); }
 
 private:
-  void precomputeProperties();
+  double computeResidual() const;
+
+  // Precompute operations
   void precompute();
+  void precomputeProperties();
   void precomputeColumn(unsigned int col);
   void precomputeRow(unsigned int row);
+
+  // Solve and sweep operations
   void solveColumn(unsigned int col);
   void solveRow(unsigned int row);
   void sweep();
-  double computeResidual();
 
 protected:
   // Number of interior nodal points in the x and y-dimensions
@@ -46,7 +50,7 @@ protected:
   // Properties stored in matrix form
   Matrix a_p, a_n, a_e, a_s, a_w;
 
-  // Relaxation coefficient
+  // Inverse of the relaxation coefficient
   const double w_inv;
   // Iteration tolerance
   const double tol;

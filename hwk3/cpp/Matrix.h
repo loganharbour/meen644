@@ -1,6 +1,8 @@
 #ifndef MATRIX
 #define MATRIX
 
+#define NDEBUG
+
 #include <vector>
 
 class Matrix {

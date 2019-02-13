@@ -1,7 +1,11 @@
 #ifndef CONDUCTION2D_H
 #define CONDUCTION2D_H
 
-#include "Base.h"
+#include <iostream>
+#include <iomanip>
+#include <cmath>
+#include <fstream>
+
 #include "Matrix.h"
 #include "TriDiagonal.h"
 

@@ -1,7 +1,7 @@
 #ifndef TRIDIAGONAL_H
 #define TRIDIAGONAL_H
 
-#include "Base.h"
+#define NDEBUG
 
 /**
  * Class that holds a tri-diagonal matrix and is able to perform TDMA in place

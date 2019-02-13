@@ -5,28 +5,29 @@
 
 /**
  * Class that holds a tri-diagonal matrix and is able to perform TDMA in place
- * with a given RHS and solution vector.
+ * with a given RHS.
  */
 class TriDiagonal {
 public:
-  TriDiagonal(unsigned int N) : N(N), A(N), B(N), C(N - 1) {}
+  TriDiagonal(unsigned int N, double val = 0)
+      : N(N), A(N, val), B(N, val), C(N - 1, val) {}
 
-  // Adds val to (i, j)
-  void add(unsigned int i, unsigned int j, double val) {
+  // Gets the value of the (i, j) entry
+  const double operator()(unsigned int i, unsigned int j) {
     assert(i < N && j > i - 2 && j < i + 2);
     if (j == i - 1)
-      A[i] += val;
+      return A[i];
     else if (j == i)
-      B[i] += val;
+      return B[i];
     else if (j == i + 1)
-      C[i] += val;
+      return C[i];
     else {
       std::cerr << "( " << i << "," << j << ") out of TriDiagonal system";
       std::terminate();
     }
   }
 
-  // Adders for the top, interior, and bottom rows
+  // Adders for the top, middle, and bottom rows
   void addTopRow(double b, double c) {
     B[0] += b;
     C[0] += c;
@@ -56,42 +57,36 @@ public:
     C[i] += val;
   }
 
-  // Reset the matrix to zero
-  void clear() {
-    clearVector(A);
-    clearVector(B);
-    clearVector(C);
+  void copyFrom(TriDiagonal &from) {
+    assert(from.getN() == N);
+    A.assign(from.getA().begin(), from.getA().end());
+    B.assign(from.getB().begin(), from.getB().end());
+    C.assign(from.getC().begin(), from.getC().end());
   }
 
-  // Saves the three diagonal vectors in separate csv files
-  void save(const std::string file_prefix) {
-    saveVectorCsv(A, file_prefix + "A.csv");
-    saveVectorCsv(B, file_prefix + "B.csv");
-    saveVectorCsv(C, file_prefix + "C.csv");
-  }
+  const std::vector<double> &getA() { return A; }
+  const std::vector<double> &getB() { return B; }
+  const std::vector<double> &getC() { return C; }
+  unsigned int getN() { return N; }
 
-  // Solves the system Ax = d in place where A is the matrix held by this class
-  void solveTDMA(std::vector<double> &d, std::vector<double> &x) {
-    double w = 0;
-
+  // Solves the system Ax = d in place where d eventually stores the solution
+  void solveTDMA(std::vector<double> &d) {
     // Forward sweep
+    double tmp = 0;
     for (unsigned int i = 1; i < N; ++i) {
-      w = A[i] / B[i - 1];
-      B[i] -= w * C[i - 1];
-      d[i] -= w * d[i - 1];
+      tmp = A[i] / B[i - 1];
+      B[i] -= tmp * C[i - 1];
+      d[i] -= tmp * d[i - 1];
     }
 
-    // Backward substitution
-    x[N - 1] = d[N - 1] / B[N - 1];
+    // Backward sweep
+    d[N - 1] /= B[N - 1];
     for (unsigned int i = N - 2; i != std::numeric_limits<unsigned int>::max();
-         --i)
-      x[i] = (d[i] - C[i] * x[i + 1]) / B[i];
+         --i) {
+      d[i] -= C[i] * d[i + 1];
+      d[i] /= B[i];
+    }
   }
-
-  // Getters for the diagonal vectors
-  const std::vector<double> &a() { return A; }
-  const std::vector<double> &b() { return B; }
-  const std::vector<double> &c() { return C; }
 
 protected:
   // Matrix size (N x N)

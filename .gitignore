@@ -12,6 +12,10 @@
 *.cb2
 .*.lb
 
+## C++ build
+*.o
+*-opt
+
 ## Build tool auxiliary files:
 *.fdb_latexmk
 *.synctex
@@ -19,3 +23,5 @@
 *.synctex.gz
 *.synctex.gz(busy)
 *.pdfsync
+
+*.DS_Store

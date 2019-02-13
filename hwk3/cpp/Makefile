@@ -1,4 +1,11 @@
-all: hwk3
+src = $(wildcard *.cpp)
+obj = $(src:.cpp=.o)
+CXXFLAGS = -std=c++14
+CCFLAGS = $(CXXFLAGS)
 
-hwk3: Base.h Conduction2D.h Solution.h TriDiagonal.h hwk3.cpp
-	clang++ -std=c++14 hwk3.cpp -o $@
+hwk-opt: $(obj)
+	clang++ -o $@ $^
+
+.PHONY: clean
+clean:
+	rm -f $(obj) hwk-opt

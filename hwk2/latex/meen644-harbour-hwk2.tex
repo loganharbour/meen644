@@ -29,7 +29,10 @@
 \usepackage{siunitx}
 \usepackage[cache=false]{minted}
 \usepackage{subcaption}
-\renewcommand{\MintedPygmentize}{/Users/loganharbour/miniconda/bin/pygmentize}
+\usepackage[cache=false]{minted}
+\renewcommand{\MintedPygmentize}{/Users/logan/miniconda/bin/pygmentize}
+\usepackage[scaled]{beramono}
+\usepackage[T1]{fontenc}
 \usepackage[]{algorithm2e}
 
 \setlength\parindent{0pt} % No indents
@@ -68,7 +71,7 @@ With one-dimensional heat conduction with convection and constant material prope
 where
 \begin{align*}
 	k & \equiv 400~\text{W/m}~^\circ\text{C}\,, & h & \equiv 0.5~\text{W/m}^2~^\circ\text{C}\,, & d & \equiv 0.05~\text{m}\,,\\
-	L & \equiv 1.0~\text{m}\,, & T_0 & \equiv 100~^\circ\text{C}\,, & T_\infty & \equiv 25~^\circ\text{C}\,.\\ 
+	L & \equiv 1.0~\text{m}\,, & T_0 & \equiv 100~^\circ\text{C}\,, & T_\infty & \equiv 25~^\circ\text{C}\,.\\
 \end{align*}
 We then make the substitutions $\theta(x) = T(x) - T_\infty$ and $m = 4h/kd$ to obtain the simplification
 \begin{equation}
@@ -78,7 +81,7 @@ We then make the substitutions $\theta(x) = T(x) - T_\infty$ and $m = 4h/kd$ to 
 		\dv{\theta}{x} \big|_{x = L} = - \frac{h}{k} \theta\,.
 	\end{cases}
 	\end{equation}
-	
+
 \subsection*{Grid generation}
 
 We discretize the region on $x = [0, L]$ by $N$ (also defined as ITMAX) nodes and $N$ control volumes, as follows in Figure \ref{fig:CVs} with $\Delta x = L / (N - 1)$.
@@ -89,20 +92,20 @@ We discretize the region on $x = [0, L]$ by $N$ (also defined as ITMAX) nodes an
 		\centering
 		\begin{tikzpicture}[scale=2]
 			\tikzset{dimen/.style={<->,>=latex,thin,every rectangle node/.style={fill=white,midway,font=\small}}}
-			
+
 			\draw (0,0) -- (1.5, 0);
-			
+
 			\foreach \i in {0, 0.5, 1.5}
 				\draw (\i, -0.1) -- (\i, 0.1);
-			
+
 			\foreach \i in {0, 1}
 				\filldraw (\i, 0) circle (0.75pt);
-				
+
 			\node[below] at (0, -0.05) {$\theta_1$};
 			\node[below] at (1, -0.05) {$\theta_2$};
 			\node[above] at (0.25, 0.4) {CV$_1$};
 			\node[above] at (1, 0.4) {CV$_2$};
-			
+
 			\draw [dimen] (0.5, 0.25) -- (1.5, 0.25) node {$\Delta x$};
 			\draw [dimen] (0.0, -0.5) -- (1.0, -0.5) node {$\Delta x$};
 		\end{tikzpicture}
@@ -113,15 +116,15 @@ We discretize the region on $x = [0, L]$ by $N$ (also defined as ITMAX) nodes an
 		\centering
 		\begin{tikzpicture}[scale=2]
 			\tikzset{dimen/.style={<->,>=latex,thin,every rectangle node/.style={fill=white,midway,font=\small}}}
-			
+
 			\draw (0,0) -- (2,0);
-			
+
 			\foreach \i in {0.5, 1.5}
 				\draw (\i, -0.1) -- (\i, 0.1);
-			
+
 			\foreach \i in {0, 1, 2}
 			\filldraw (\i, 0) circle (0.75pt);
-			
+
 			\node[below] at (0, -0.05) {$\theta_{i-1}$};
 			\node[below] at (1, -0.05) {$\theta_i$};
 			\node[below] at (2, -0.05) {$\theta_{i+1}$};
@@ -130,7 +133,7 @@ We discretize the region on $x = [0, L]$ by $N$ (also defined as ITMAX) nodes an
 			\node[above] at (1.0, 0.4) {CV$_i$};
 			\node[above] at (0.25, 0.4) {CV$_{i-1}$};
 			\node[above] at (1.75, 0.4) {CV$_{i+1}$};
-			
+
 			\draw [dimen] (0.5, 0.25) -- (1.5, 0.25) node {$\Delta x$};
 			\draw [dimen] (0, -0.5) -- (1.0, -0.5) node {$\Delta x$};
 			\draw [dimen] (1, -0.5) -- (2.0, -0.5) node {$\Delta x$};
@@ -142,21 +145,21 @@ We discretize the region on $x = [0, L]$ by $N$ (also defined as ITMAX) nodes an
 		\centering
 		\begin{tikzpicture}[scale=2]
 			\tikzset{dimen/.style={<->,>=latex,thin,every rectangle node/.style={fill=white,midway,font=\small}}}
-			
+
 			\draw (0,0) -- (1.5,0);
-			
+
 			\foreach \i in {0, 1, 1.5}
 				\draw (\i, -0.1) -- (\i, 0.1);
-			
+
 			\foreach \i in {0.5, 1.5}
 				\filldraw (\i, 0) circle (0.75pt);
-			
+
 			\node[below] at (0.5, -0.05) {$\theta_{N-1}$};
 			\node[below] at (1.5, -0.05) {$\theta_N$};
 			\node[above] at (1.25, 0.4) {CV$_N$};
 			\node[above] at (0.5, 0.4) {CV$_{N-1}$};
 			\node[below] at (1.0, -0.1) {$w(N)$};
-			
+
 			\draw [dimen] (0.5, 0.25) -- (1.5, 0.25) node {$\Delta x$};
 			\draw [dimen] (0.0, -0.5) -- (1.0, -0.5) node {$\Delta x$};
 		\end{tikzpicture}
@@ -259,5 +262,206 @@ The plotted results as requested follow below in Figure \ref{fig:results}.
 	\caption{The plotted solution.}
 	\label{fig:results}
 \end{figure}
+
+\section*{Code listing}
+
+\subsection*{Makefile}
+
+\begin{minted}[fontsize=\small]{Makefile}
+
+all: hwk2
+
+hwk2: Base.h TriDiagonal.h hwk2.cpp
+	clang++ -std=c++14 hwk2.cpp -o $@
+
+\end{minted}
+
+\subsection*{hwk2.cpp}
+
+\begin{minted}[fontsize=\small]{c++}
+
+#include "Base.h"
+#include "TriDiagonal.h"
+
+/**
+ * Solves the 1D heat-conduction (with convection) problem with N nodes.
+ */
+void solveRod(unsigned int N) {
+  // Initialize geometry, material properties, and constant coefficients
+  double L = 1,         // [m]
+      dx = L / (N - 1), // [m]
+      d = 0.05,         // [m]
+      k = 400.0,        // [W/m-C]
+      h = 0.5,          // [W/m^2-C]
+      T0 = 100.0,       // [C]
+      Tinf = 25.0,      // [C]
+      m = 4.0 * h / (k * d),
+      a_p = m * dx + 2.0 / dx,
+      a_w = 1.0 / dx,
+      a_e = 1.0 / dx;
+
+  // Initialize system A theta = b
+  TriDiagonal A(N - 1);
+  std::vector<double> theta(N - 1), b(N - 1);
+
+  // Fill system
+  A.addTopRow(a_p, -a_e);
+  b[0] = a_w * (T0 - Tinf);
+  for (unsigned int i = 1; i < N - 2; ++i)
+    A.addMiddleRow(i, -a_w, a_p, -a_e);
+  A.addBottomRow(-a_w, m * dx / 2.0 + h / k + a_e);
+
+  // Solve system in place and save
+  A.solveTDMA(b, theta);
+  saveVectorCsv(theta, "../results/theta_" + std::to_string(N) + ".csv");
+}
+
+int main() {
+  // Run each requested case
+  for (unsigned int N : {6, 11, 21, 41, 81})
+    solveRod(N);
+
+  return 0;
+}
+
+\end{minted}
+
+\subsection*{Base.h}
+
+\begin{minted}[fontsize=\small]{c++}
+
+#ifndef BASE_H
+#define BASE_H
+
+#define NDEBUG
+
+#include <cassert>
+#include <exception>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <math.h>
+#include <string>
+#include <vector>
+
+/**
+ * Saves a vector to a csv.
+ */
+void saveVectorCsv(const std::vector<double> x, const std::string filename) {
+  std::ofstream f;
+  f.open(filename);
+  for (unsigned int i = 0; i < x.size(); ++i)
+    f << std::setprecision(12) << x[i] << std::endl;
+  f.close();
+}
+
+#endif /* BASE_H */
+
+\end{minted}
+
+\subsection*{TriDiagonal.h}
+
+\begin{minted}[fontsize=\small]{c++}
+
+#include "Base.h"
+
+/**
+ * Class that holds a tri-diagonal matrix and is able to perform TDMA in place
+ * with a given RHS and solution vector.
+ */
+class TriDiagonal {
+public:
+  TriDiagonal(unsigned int N) : _N(N), _a(N), _b(N), _c(N - 1) {}
+
+  // Adds val to (i, j)
+  void add(unsigned int i, unsigned int j, double val) {
+    assert(i < _N && j > i - 2 && j < i + 2);
+    if (j == i - 1)
+      _a[i] += val;
+    else if (j == i)
+      _b[i] += val;
+    else if (j == i + 1)
+      _c[i] += val;
+    else {
+      std::cerr << "( " << i << "," << j << ") out of TriDiagonal system";
+      std::terminate();
+    }
+  }
+
+  // Adders for the top, interior, and bottom rows
+  void addTopRow(double b, double c) {
+    _b[0] += b;
+    _c[0] += c;
+  }
+  void addMiddleRow(unsigned int i, double a, double b, double c) {
+    assert(i < _N - 1 && i != 0);
+    _a[i] += a;
+    _b[i] += b;
+    _c[i] += c;
+  }
+  void addBottomRow(double a, double b) {
+    _a[_N - 1] += a;
+    _b[_N - 1] += b;
+  }
+
+  // Adders for the left, main, and right diagonals
+  void addLeft(unsigned int i, double val) {
+    assert(i < _N && i != 0);
+    _a[i] += val;
+  }
+  void addMain(unsigned int i, double val) {
+    assert(i < _N);
+    _b[i] += val;
+  }
+  void addRight(unsigned int i, double val) {
+    assert(i < _N - 1);
+    _c[i] += val;
+  }
+
+  // Reset the matrix to zero
+  void reset() {
+    std::fill(_a.begin(), _a.end(), 0);
+    std::fill(_b.begin(), _b.end(), 0);
+    std::fill(_c.begin(), _c.end(), 0);
+  }
+
+  // Saves the three diagonal vectors in separate csv files
+  void saveCsv(const std::string file_prefix) {
+    saveVectorCsv(_a, file_prefix + "_a.csv");
+    saveVectorCsv(_b, file_prefix + "_b.csv");
+    saveVectorCsv(_c, file_prefix + "_c.csv");
+  }
+
+  // Solves the system Ax = d in place where A is the matrix held by this class
+  void solveTDMA(std::vector<double> &d, std::vector<double> &x) {
+    double w = 0;
+
+    // Forward sweep
+    for (unsigned int i = 1; i < _N; ++i) {
+      w = _a[i] / _b[i - 1];
+      _b[i] -= w * _c[i - 1];
+      d[i] -= w * d[i - 1];
+    }
+
+    // Backward substitution
+    x[_N - 1] = d[_N - 1] / _b[_N - 1];
+    for (unsigned int i = _N - 2; i != std::numeric_limits<unsigned int>::max();
+         --i)
+      x[i] = (d[i] - _c[i] * x[i + 1]) / _b[i];
+  }
+
+  // Getters for the diagonal vectors
+  const std::vector<double> &a() { return _a; }
+  const std::vector<double> &b() { return _b; }
+  const std::vector<double> &c() { return _c; }
+
+protected:
+  // Matrix size (_N x _N)
+  unsigned int _N;
+  // Left/main/right diagonal storage
+  std::vector<double> _a, _b, _c;
+};
+
+\end{minted}
 
 \end{document}

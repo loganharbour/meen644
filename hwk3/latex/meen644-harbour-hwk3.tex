@@ -31,7 +31,7 @@
 \usepackage[]{algorithm2e}
 \usepackage{float}
 \usepackage[cache=false]{minted}
-\renewcommand{\MintedPygmentize}{/Users/logan/miniconda/bin/pygmentize}
+\renewcommand{\MintedPygmentize}{/Users/loganharbour/miniconda/bin/pygmentize}
 \usepackage[scaled]{beramono}
 \usepackage[T1]{fontenc}
 
@@ -86,14 +86,19 @@ We discretize the region on $x \times y = [0, L]^2$ by $N^2$ internal nodes with
 
 \subsection*{Control volume equations}
 
-Integrate over an internal control volume $(i,j)$ and use the two node formulation for the derivative to obtain
+Integrate over an internal control volume $(i,j)$ to obtain
+\begin{align*}
+	k \iint_{CV_{i, j}} \left[ \pdv{^2T}{x^2} + \pdv{^2T}{y^2} \right] dxdy & = 0\,, \quad (i, j) \in [2, 3, \ldots, N - 1]^2\,.\\
+	k \Delta y \left[ \pdv{T}{x}\Big|_{w_{i,j}} - \pdv{T}{x}\Big|_{e_{i,j}} \right] + k \Delta x \left[ \pdv{T}{y}\Big|_{n_{i,j}} - \pdv{T}{y}\Big|_{s_{i,j}} \right] & = 0\,, \quad (i, j) \in [2, 3, \ldots, N - 1]^2\,.
+\end{align*}
+Now use the two node formulation for the derivative terms to obtain
 \[
-	k \Delta y \left[\frac{T_{E_{ij}} - T_{P_{ij}}}{\Delta x} - \frac{T_{P_{ij}} - T_{W_{ij}}}{\Delta x}\right] + k \Delta x \left[ \frac{T_{N_{ij}} - T_{P_{ij}}}{\Delta y} -\frac{T_{P_{ij}} - T_{S_{ij}}}{\Delta y} \right] = 0\,, \quad (i, j) \in [2, 3, \ldots, N]^2\,.
+	k \Delta y \left[\frac{T_{E_{ij}} - T_{P_{ij}}}{\Delta x} - \frac{T_{P_{ij}} - T_{W_{ij}}}{\Delta x}\right] + k \Delta x \left[ \frac{T_{N_{ij}} - T_{P_{ij}}}{\Delta y} -\frac{T_{P_{ij}} - T_{S_{ij}}}{\Delta y} \right] = 0\,, \quad (i, j) \in [2, 3, \ldots, N - 1]^2\,.
 \]
 Collect like terms and modify the index to obtain
 \begin{equation}
 	\label{eq:internal}
-	T_{i,j} a_p - T_{i, j+1} a_n - T_{i+1, j} a_e - T_{i, j-1} a_s - T_{i-1, j} a_w = 0\,,\quad (i, j) \in [2, 3, \ldots, N]^2\,,
+	T_{i,j} a_p - T_{i, j+1} a_n - T_{i+1, j} a_e - T_{i, j-1} a_s - T_{i-1, j} a_w = 0\,,\quad (i, j) \in [2, 3, \ldots, N - 1]^2\,,
 \end{equation}
 where
 \[

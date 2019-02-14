@@ -50,7 +50,13 @@
 
 \section*{Problem statement}
 
-Complete
+Consider a thin copper square plate of dimensions 0.5 m $\times$ 0.5 m. The temperature of the west and south edges are maintained at 50 $^\circ$C and the north edge is maintained at 100 $^\circ$C. The east edge is insulated. Using finite volume method, write a program to predict the steady-state temperature solution.
+
+\begin{enumerate}[label=(\alph*)]
+	\item \textbf{(35 points)} Set the over relaxation factor $\alpha$ from 1.00 to 1.40 in steps of 0.05 to identify $\alpha_\text{opt}$. Plot the number of iterations required for convergence for each $\alpha$.
+	\item \textbf{(15 points)} Solve the same problem using $21^2, 25^2, 31^2$, and $41^2$ CVs, respectively. Plot the temperature at the center of the plate (0.25 m, 0.25 m) vs CVs.
+	\item \textbf{(10 points)} Plot the steady state temperature contour in the 2D domain with the $41^2$ CV solution.
+\end{enumerate}
 
 \section*{Preliminaries}
 
@@ -74,9 +80,7 @@ where
 
 We discretize the region on $x \times y = [0, L]^2$ by $N^2$ internal nodes with $\Delta x = x / N, \Delta y = y / N$.
 
-\subsection*{Equation discretization}
-
-\subsubsection*{Internal control volume equations}
+\subsection*{Control volume equations}
 
 Integrate over an internal control volume $(i,j)$ and use the two node formulation for the derivative to obtain
 \[
@@ -92,59 +96,29 @@ where
 	a_n \equiv \frac{k \Delta y}{\Delta x}\,, \quad a_e \equiv \frac{k \Delta x}{\Delta y}\,, \quad a_s \equiv \frac{k\Delta y}{\Delta x}\,, \quad a_w \equiv \frac{k\Delta x}{\Delta y}\,, \quad a_p \equiv a_n + a_e + a_s + a_w\,.
 \]
 
-The remaining equations are solved similarly.
+The remaining equations are solved similarly but with slight differences depending on which boundary the CV is on.
 
-\subsubsection*{Bottom internal control volume equations}
+\subsection*{Solving method}
 
+The problem is to be solved by the line-by-line method. In specific, the sweeping arrangement is: \textbf{south to north, west to east, north to south, east to west}. In this method, the contribution from one direction in a given control volume is lagged and moved to the right hand side in order to solve a tri-diagonal system. Convergence is declared when
 \begin{equation}
-	T_{i,2} (a_n + a_e + 2a_s + a_w) - T_{i,3} a_n - T_{i+1,2} a_e - T_{i-1, 2} a_w = 2 T_B a_s\,, \quad i \in 3, 4, \ldots, N\,.
+	R = \sum_\text{CV} \left| a_p T_p - \sum_{\text{nb}} a_\text{nb} T_\text{nb} b_p\right|\leq 10^{-5}\,.
 \end{equation}
 
-\subsubsection*{Bottom left control volume equation}
-\begin{equation}
-	\label{eq:bot_left}
-	T_{2,2} (a_n + a_e + 2 a_s + 2 a_w) - T_{2,3} a_n - T_{3,2} a_e = 2 T_B a_s + 2 T_L a_w\,.
-\end{equation}
-
-\subsubsection*{Left internal control volume equations}
-
-\begin{equation}
-	T_{2,j} (a_n + a_e + a_s + 2a_w) - T_{2,j+1} a_n - T_{3,j}a_e - T_{2,j-1} a_s = 2 T_L a_w\,, \quad j \in 3, 4, \ldots, N\,.
-\end{equation}
-
-\subsubsection*{Top left control volume equation}
-
-\begin{equation}
-	T_{2, N+1} (2a_n + a_e + a_s + 2a_w) - T_{2,N} a_s - T_{3,N+1} a_e = 2 T_T a_n + 2 T_L a_w\,.
-\end{equation}
-
-\subsubsection*{Top internal control volume equation}
-
-\begin{equation}
-	T_{i,N+1} (2a_n + a_e + a_s + a_w) - T_{i+1,N+1}a_e - T_{i, N} a_s - T_{i-1,N+1} a_w = 2 T_T a_n\,, \quad i \in 3, 4, \ldots, N\,.
-\end{equation}
-
-\subsubsection*{Top right control volume equation}
-
-\begin{equation}
-	T_{N+1, N+1} (2a_n + a_s + a_w) - T_{N+1, N} a_s - T_{N, N+1} a_w = 2 T_T a_n\,.
-\end{equation}
-
-\subsubsection*{Right internal control volume equations}
-
-\begin{equation}
-	T_{N+1, j} (a_n + a_s + a_w) - T_{N+1, j+1} a_n - T_{N+1, j - 1} a_s - T_{N, j} a_w = 0\,, \quad j \in 3, 4, \ldots, N\,.
-\end{equation}
-
-\subsubsection*{Bottom right control volume equation}
-
-\begin{equation}
-	T_{N+1, 2} (a_n + 2 a_s + a_w) - T_{N+1, 3} a_n - T_{N, 2} a_w = 2 T_B a_s\,.
-\end{equation}
+Upon solving an individual system $Ax^{\ell + 1} = b$ with relaxation (where $\ell$ is the iteration index), the system is relaxed with the coefficient $\alpha$ by modifying it after construction by
+\[
+	\begin{cases}
+		a_{ii} = a_{ii} / \alpha\,,\\
+		b_i = b_i + (\alpha^{-1} - 1) a_{ii} x_i^\ell\,,
+	\end{cases} \quad i = 1, \ldots, N\,,
+\]
+and it is then solved using the standard TDMA algorithm.
 
 \section*{Results}
 
 \subsection*{Part a}
+
+With the given range of $\alpha$, it was determined for this specific problem with $15^2$ CVs that $\alpha_\text{opt} \approx 1.3$. The requested figure showing the iteration need for each relaxation parameter follows in Figure \ref{fig:iterations}.
 
 \begin{figure}[H]
 	\centering
@@ -155,6 +129,8 @@ The remaining equations are solved similarly.
 
 \subsection*{Part b}
 
+With a mesh refinement of $21^2, 25^2, 31^2,$ and $41^2$ CVs, the center temperature for each refinement is plotted below in Figure \ref{fig:center}.
+
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=\linewidth]{../python/center}
@@ -164,10 +140,12 @@ The remaining equations are solved similarly.
 
 \subsection*{Part c}
 
+With the final mesh refinement of $41^2$ CVs, a colored contour plot of the temperature solution follows in Figure \ref{fig:solution}.
+
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.7\linewidth]{../python/solution}
-	\caption{Plot of the solution with $41 \times 41$ CVs.}
+	\caption{Plot of the solution with $41^2$ CVs.}
 	\label{fig:solution}
 \end{figure}
 

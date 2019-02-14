@@ -15,7 +15,7 @@ int main() {
   for (unsigned int N : {15, 21, 25, 31, 41}) {
     std::cout << " Running with " << N * N << " CVs: ";
 
-    Conduction2D problem(N, N, 1.2);
+    Conduction2D problem(N, N, 1.3);
     problem.solve();
     std::cout << "  Center solution = " << std::setprecision(10)
               << problem.getT()((N - 1) / 2, (N - 1) / 2) << " C" << std::endl;

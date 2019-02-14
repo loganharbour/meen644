@@ -2,27 +2,32 @@
 #define MATRIX
 
 #define NDEBUG
+#include <cassert>
 
 #include <vector>
 
 class Matrix {
 public:
-  Matrix(unsigned int Nx, unsigned int Ny, double val = 0)
-      : Nx(Nx), Ny(Ny), M(Nx, std::vector<double>(Ny, val)) {}
+  Matrix(unsigned int Nx, unsigned int Ny, double v = 0)
+      : Nx(Nx), Ny(Ny), M(Nx, std::vector<double>(Ny, v)) {}
 
+  // Const operator for getting the (i, j) element
   const double &operator()(unsigned int i, unsigned int j) const {
     assert(i < Nx && j < Ny);
     return M[i][j];
   }
+  // Operator for getting the (i, j) element
   double &operator()(unsigned int i, unsigned int j) {
     assert(i < Nx && j < Ny);
     return M[i][j];
   }
-  Matrix &operator=(const double rhs) {
-    setAll(rhs);
-    return *this;
+  // Operator for setting the entire matrix to a value
+  void operator=(double v) {
+    for (unsigned int j = 0; j < Ny; ++j)
+      setRow(j, v);
   }
 
+  // Saves the matrix in csv format
   void save(const std::string filename, unsigned int precision = 12) const {
     std::ofstream f;
     f.open(filename);
@@ -37,34 +42,37 @@ public:
     f.close();
   }
 
-  void setRow(unsigned int j, double val) {
+  // Set the j-th row to v
+  void setRow(unsigned int j, double v) {
     assert(j < Ny);
     for (unsigned int i = 0; i < Nx; ++i)
-      M[i][j] = val;
+      M[i][j] = v;
   }
-  void setColumn(unsigned int i, double val) {
+  // Set the i-th column to v
+  void setColumn(unsigned int i, double v) {
     assert(i < Nx);
     for (unsigned int j = 0; j < Ny; ++j)
-      M[i][j] = val;
-  }
-  void setAll(double val) {
-    for (unsigned int j = 0; j < Ny; ++j)
-      setRow(j, val);
+      M[i][j] = v;
   }
 
-  void setRow(unsigned int j, std::vector<double> &vals) {
-    assert(j < Ny && vals.size() == Nx);
+  // Set the j-th row to vs
+  void setRow(unsigned int j, std::vector<double> &vs) {
+    assert(j < Ny && vs.size() == Nx);
     for (unsigned int i = 0; i < Nx; ++i)
-      M[i][j] = vals[i];
+      M[i][j] = vs[i];
   }
-  void setColumn(unsigned int i, std::vector<double> &vals) {
-    assert(i < Nx && vals.size() == Ny);
+  // Set the i-th column to vs
+  void setColumn(unsigned int i, std::vector<double> &vs) {
+    assert(i < Nx && vs.size() == Ny);
     for (unsigned int j = 0; j < Ny; ++j)
-      M[i][j] = vals[j];
+      M[i][j] = vs[j];
   }
 
 private:
+  // The size of this matrix
   const unsigned int Nx, Ny;
+
+  // Matrix storage
   std::vector<std::vector<double> > M;
 };
 

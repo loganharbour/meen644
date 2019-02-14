@@ -16,7 +16,7 @@ public:
                double T_T = 100.0, double T_B = 50.0, double tol = 1e-5,
                unsigned int max_its = 1000);
 
-  void run();
+  void solve();
 
   unsigned int getNx() { return Nx; }
   unsigned int getNy() { return Ny; }
@@ -27,7 +27,6 @@ private:
   double computeResidual() const;
 
   // Precompute operations
-  void precompute();
   void precomputeProperties();
   void precomputeColumn(unsigned int col);
   void precomputeRow(unsigned int row);
@@ -35,17 +34,16 @@ private:
   // Solve and sweep operations
   void solveColumn(unsigned int col);
   void solveRow(unsigned int row);
-  void sweep();
 
 protected:
   // Number of interior nodal points in the x and y-dimensions
   const unsigned int Nx, Ny;
 
-  // Geometry
+  // Geometry [m]
   const double Lx, Ly, dx, dy;
-  // Material properties
+  // Heat conduction coefficient [W / m k]
   const double k;
-  // Boundary conditions
+  // Dirichlet oundary conditions (left, top, bottom) [C]
   const double T_L, T_T, T_B;
   // Properties stored in matrix form
   Matrix a_p, a_n, a_e, a_s, a_w;

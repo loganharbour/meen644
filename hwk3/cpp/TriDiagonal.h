@@ -2,6 +2,7 @@
 #define TRIDIAGONAL_H
 
 #define NDEBUG
+#include <cassert>
 
 /**
  * Class that holds a tri-diagonal matrix and is able to perform TDMA in place
@@ -9,8 +10,16 @@
  */
 class TriDiagonal {
 public:
-  TriDiagonal(unsigned int N, double val = 0)
-      : N(N), A(N, val), B(N, val), C(N - 1, val) {}
+  TriDiagonal(unsigned int N, double v = 0)
+      : N(N), A(N, v), B(N, v), C(N - 1, v) {}
+
+  // Operator for setting the entire matrix to a value
+  void operator=(TriDiagonal & from) {
+    assert(from.getN() == N);
+    A = from.getA();
+    B = from.getB();
+    C = from.getC();
+  }
 
   // Gets the value of the (i, j) entry
   const double operator()(unsigned int i, unsigned int j) const {
@@ -43,18 +52,12 @@ public:
     B[N - 1] += b;
   }
 
-  void copyFrom(TriDiagonal &from) {
-    assert(from.getN() == N);
-    A.assign(from.getA().begin(), from.getA().end());
-    B.assign(from.getB().begin(), from.getB().end());
-    C.assign(from.getC().begin(), from.getC().end());
-  }
-
   // Getters for the raw vectors
   const std::vector<double> &getA() const { return A; }
   const std::vector<double> &getB() const { return B; }
   const std::vector<double> &getC() const { return C; }
 
+  // Getter for the size
   unsigned int getN() { return N; }
 
   // Solves the system Ax = d in place where d eventually stores the solution
@@ -79,6 +82,7 @@ public:
 protected:
   // Matrix size (N x N)
   unsigned int N;
+
   // Left/main/right diagonal storage
   std::vector<double> A, B, C;
 };

@@ -9,6 +9,11 @@
 #include "Matrix.h"
 #include "TriDiagonal.h"
 
+ /**
+  * Solves a 2D heat conduction problem with dirichlet conditions on the top,
+  * left, bottom and with a zero-flux condition on the right with Nx x Ny
+  * internal control volumes.
+  */
 class Conduction2D {
 public:
   Conduction2D(unsigned int Nx, unsigned int Ny, double alpha, double Lx = 0.5,

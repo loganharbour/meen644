@@ -1,5 +1,19 @@
-#include "Base.h"
+#include <fstream>
+#include <iomanip>
+#include <string>
+
 #include "TriDiagonal.h"
+
+/**
+ * Saves a vector to a csv.
+ */
+void saveVectorCsv(const std::vector<double> x, const std::string filename) {
+  std::ofstream f;
+  f.open(filename);
+  for (unsigned int i = 0; i < x.size(); ++i)
+    f << std::setprecision(12) << x[i] << std::endl;
+  f.close();
+}
 
 /**
  * Solves the 1D heat-conduction (with convection) problem with N nodes.
@@ -20,7 +34,7 @@ void solveRod(unsigned int N) {
 
   // Initialize system A theta = b
   TriDiagonal A(N - 1);
-  std::vector<double> theta(N - 1), b(N - 1);
+  std::vector<double> b(N - 1);
 
   // Fill system
   A.addTopRow(a_p, -a_e);
@@ -30,8 +44,8 @@ void solveRod(unsigned int N) {
   A.addBottomRow(-a_w, m * dx / 2.0 + h / k + a_e);
 
   // Solve system in place and save
-  A.solveTDMA(b, theta);
-  saveVectorCsv(theta, "../results/theta_" + std::to_string(N) + ".csv");
+  A.solveTDMA(b);
+  saveVectorCsv(b, "../results/theta_" + std::to_string(N) + ".csv");
 }
 
 int main() {

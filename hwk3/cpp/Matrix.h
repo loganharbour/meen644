@@ -3,9 +3,11 @@
 
 #define NDEBUG
 #include <cassert>
-
 #include <vector>
 
+/**
+ * Class that holds a Nx x Ny matrix with common matrix operations.
+ */
 class Matrix {
 public:
   Matrix(unsigned int Nx, unsigned int Ny, double v = 0)

@@ -236,7 +236,7 @@ The system we are solving is of the form
 		d_n
 	\end{bmatrix}\,.
 \]
-We will solve this system using the tridiagonal matrix algorithm (TDMA) given the fact that our system is positive definite. With our matrix in the form above, the algorithm follows in Algorithm \ref{alg:tdma}.
+We will solve this system using the tridiagonal matrix algorithm (TDMA) given the fact that our system is positive definite. With our matrix in the form above, the algorithm follows in Algorithm \ref{alg:tdma}. Note that for the algorithm below, we are solving the solution vector $\vec{x}$ in-place with the vector $\vec{d}$. This algorithm is in the member function \texttt{solveTDMA()} in the \texttt{TriDiagonal} class, which stores the left hand side system in the vectors $\vec{a}, \vec{b}$, and $\vec{c}$.
 
 \begin{algorithm}[H]
 	\For{$i = 2, 3, \ldots, n$}{
@@ -244,9 +244,10 @@ We will solve this system using the tridiagonal matrix algorithm (TDMA) given th
 		$b_i = b_i - w c_{i - 1}$\;
 		$d_i = d_i - w d_{i - 1}$\;
 	}
-	$x_n = d_n / b_n$\;
+	$d_n = d_n / b_n$\;
 	\For{$i = n - 1, n - 2, \ldots, 1$}{
-		$x_i = (d_i - c_i x_{i + 1}) / b_i$\;
+		$d_i = d_i - c_i d_{i+1}$\;
+		$d_i = d_i / b_i$\;
 	}
 	\caption{The tridiagonal matrix algorithm (TDMA).}
 	\label{alg:tdma}
@@ -254,7 +255,7 @@ We will solve this system using the tridiagonal matrix algorithm (TDMA) given th
 
 \section*{Results}
 
-The plotted results as requested follow below in Figure \ref{fig:results}.
+The plotted results as requested follow below in Figure \ref{fig:results}. In addition, the solution for ITMAX = 6 is tabulated in Table \ref{table:results}.
 
 \begin{figure}[H]
 	\centering
@@ -263,205 +264,38 @@ The plotted results as requested follow below in Figure \ref{fig:results}.
 	\label{fig:results}
 \end{figure}
 
+\def\arraystretch{1.3}
+\begin{table}[H]
+	\small
+	\centering
+	\caption{The solution for ITMAX = 6.}
+	\vspace{0.2cm}
+	\begin{tabular}{c|S[table-format=2.5,group-digits=false]|S[table-format=3.5,group-digits=false]}
+		\hline
+		$x$              & {$\theta$}         & {$T$}             \\
+		\scriptsize{(m)} & {\scriptsize{($^\circ$C)}} & {\scriptsize{($^\circ$C)}} \\ \hline
+		0.0              & 75.00000           & 100.00000 \\
+		0.2              & 73.68060           &  98.68060 \\
+		0.4              & 72.65593           &  97.65593 \\
+		0.6              & 71.92188           &  96.92188 \\
+		0.8              & 71.47552           &  96.47552 \\
+		1.0              & 71.31506           &  96.31506 \\
+	\end{tabular}
+	\label{table:results}
+\end{table}
+
 \section*{Code listing}
 
 \subsection*{Makefile}
 
-\begin{minted}[fontsize=\small]{Makefile}
-
-all: hwk2
-
-hwk2: Base.h TriDiagonal.h hwk2.cpp
-	clang++ -std=c++14 hwk2.cpp -o $@
-
-\end{minted}
+\inputminted[fontsize=\small]{Makefile}{../cpp/Makefile}
 
 \subsection*{hwk2.cpp}
 
-\begin{minted}[fontsize=\small]{c++}
-
-#include "Base.h"
-#include "TriDiagonal.h"
-
-/**
- * Solves the 1D heat-conduction (with convection) problem with N nodes.
- */
-void solveRod(unsigned int N) {
-  // Initialize geometry, material properties, and constant coefficients
-  double L = 1,         // [m]
-      dx = L / (N - 1), // [m]
-      d = 0.05,         // [m]
-      k = 400.0,        // [W/m-C]
-      h = 0.5,          // [W/m^2-C]
-      T0 = 100.0,       // [C]
-      Tinf = 25.0,      // [C]
-      m = 4.0 * h / (k * d),
-      a_p = m * dx + 2.0 / dx,
-      a_w = 1.0 / dx,
-      a_e = 1.0 / dx;
-
-  // Initialize system A theta = b
-  TriDiagonal A(N - 1);
-  std::vector<double> theta(N - 1), b(N - 1);
-
-  // Fill system
-  A.addTopRow(a_p, -a_e);
-  b[0] = a_w * (T0 - Tinf);
-  for (unsigned int i = 1; i < N - 2; ++i)
-    A.addMiddleRow(i, -a_w, a_p, -a_e);
-  A.addBottomRow(-a_w, m * dx / 2.0 + h / k + a_e);
-
-  // Solve system in place and save
-  A.solveTDMA(b, theta);
-  saveVectorCsv(theta, "../results/theta_" + std::to_string(N) + ".csv");
-}
-
-int main() {
-  // Run each requested case
-  for (unsigned int N : {6, 11, 21, 41, 81})
-    solveRod(N);
-
-  return 0;
-}
-
-\end{minted}
-
-\subsection*{Base.h}
-
-\begin{minted}[fontsize=\small]{c++}
-
-#ifndef BASE_H
-#define BASE_H
-
-#define NDEBUG
-
-#include <cassert>
-#include <exception>
-#include <fstream>
-#include <iomanip>
-#include <iostream>
-#include <math.h>
-#include <string>
-#include <vector>
-
-/**
- * Saves a vector to a csv.
- */
-void saveVectorCsv(const std::vector<double> x, const std::string filename) {
-  std::ofstream f;
-  f.open(filename);
-  for (unsigned int i = 0; i < x.size(); ++i)
-    f << std::setprecision(12) << x[i] << std::endl;
-  f.close();
-}
-
-#endif /* BASE_H */
-
-\end{minted}
+\inputminted[fontsize=\small]{c++}{../cpp/hwk2.cpp}
 
 \subsection*{TriDiagonal.h}
 
-\begin{minted}[fontsize=\small]{c++}
-
-#include "Base.h"
-
-/**
- * Class that holds a tri-diagonal matrix and is able to perform TDMA in place
- * with a given RHS and solution vector.
- */
-class TriDiagonal {
-public:
-  TriDiagonal(unsigned int N) : _N(N), _a(N), _b(N), _c(N - 1) {}
-
-  // Adds val to (i, j)
-  void add(unsigned int i, unsigned int j, double val) {
-    assert(i < _N && j > i - 2 && j < i + 2);
-    if (j == i - 1)
-      _a[i] += val;
-    else if (j == i)
-      _b[i] += val;
-    else if (j == i + 1)
-      _c[i] += val;
-    else {
-      std::cerr << "( " << i << "," << j << ") out of TriDiagonal system";
-      std::terminate();
-    }
-  }
-
-  // Adders for the top, interior, and bottom rows
-  void addTopRow(double b, double c) {
-    _b[0] += b;
-    _c[0] += c;
-  }
-  void addMiddleRow(unsigned int i, double a, double b, double c) {
-    assert(i < _N - 1 && i != 0);
-    _a[i] += a;
-    _b[i] += b;
-    _c[i] += c;
-  }
-  void addBottomRow(double a, double b) {
-    _a[_N - 1] += a;
-    _b[_N - 1] += b;
-  }
-
-  // Adders for the left, main, and right diagonals
-  void addLeft(unsigned int i, double val) {
-    assert(i < _N && i != 0);
-    _a[i] += val;
-  }
-  void addMain(unsigned int i, double val) {
-    assert(i < _N);
-    _b[i] += val;
-  }
-  void addRight(unsigned int i, double val) {
-    assert(i < _N - 1);
-    _c[i] += val;
-  }
-
-  // Reset the matrix to zero
-  void reset() {
-    std::fill(_a.begin(), _a.end(), 0);
-    std::fill(_b.begin(), _b.end(), 0);
-    std::fill(_c.begin(), _c.end(), 0);
-  }
-
-  // Saves the three diagonal vectors in separate csv files
-  void saveCsv(const std::string file_prefix) {
-    saveVectorCsv(_a, file_prefix + "_a.csv");
-    saveVectorCsv(_b, file_prefix + "_b.csv");
-    saveVectorCsv(_c, file_prefix + "_c.csv");
-  }
-
-  // Solves the system Ax = d in place where A is the matrix held by this class
-  void solveTDMA(std::vector<double> &d, std::vector<double> &x) {
-    double w = 0;
-
-    // Forward sweep
-    for (unsigned int i = 1; i < _N; ++i) {
-      w = _a[i] / _b[i - 1];
-      _b[i] -= w * _c[i - 1];
-      d[i] -= w * d[i - 1];
-    }
-
-    // Backward substitution
-    x[_N - 1] = d[_N - 1] / _b[_N - 1];
-    for (unsigned int i = _N - 2; i != std::numeric_limits<unsigned int>::max();
-         --i)
-      x[i] = (d[i] - _c[i] * x[i + 1]) / _b[i];
-  }
-
-  // Getters for the diagonal vectors
-  const std::vector<double> &a() { return _a; }
-  const std::vector<double> &b() { return _b; }
-  const std::vector<double> &c() { return _c; }
-
-protected:
-  // Matrix size (_N x _N)
-  unsigned int _N;
-  // Left/main/right diagonal storage
-  std::vector<double> _a, _b, _c;
-};
-
-\end{minted}
+\inputminted[fontsize=\small]{c++}{../cpp/TriDiagonal.h}
 
 \end{document}

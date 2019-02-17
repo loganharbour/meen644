@@ -45,8 +45,9 @@ void Conduction2D::solve() {
     for (int i = Nx - 1; i >= 0; --i)
       solveColumn(i);
 
-    // Check for convergence
+    // Check for convergence and store residual
     double R = computeResidual();
+    residuals.push_back(R);
     if (R < tol) {
       std::cout << "Converged with " << l << " iterations" << std::endl;
       return;

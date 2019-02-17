@@ -105,7 +105,7 @@ where (note that the below applies only to \textit{internal} control volumes)
 	a_n \equiv \frac{k \Delta y}{\Delta x}\,, \quad a_e \equiv \frac{k \Delta x}{\Delta y}\,, \quad a_s \equiv \frac{k\Delta y}{\Delta x}\,, \quad a_w \equiv \frac{k\Delta x}{\Delta y}\,, \quad a_p \equiv a_n + a_e + a_s + a_w\,.
 \]
 
-The remaining equations are solved similarly but with slight differences depending on which boundary the CV is on; for example, for control volumes on the left boundary, $a_w = 2 k \Delta y / \Delta x$.
+The remaining equations are solved similarly but with slight differences depending on which boundary the CV is on; for example, for control volumes on the left boundary we instead have $a_w = 2 k \Delta y / \Delta x$.
 
 \subsection*{Solving method}
 
@@ -127,55 +127,96 @@ and it is then solved using the standard TDMA algorithm.
 
 \subsection*{Part a}
 
-With the given range of $\alpha$, it was determined for this specific problem with $15^2$ CVs that $\alpha_\text{opt} \approx 1.3$. The solve did not converge (with an attempted 1,000 iterations) for $\alpha = 1.4$. The requested figure showing the iteration need for each relaxation parameter follows in Figure \ref{fig:iterations}.
+With the given range of $\alpha$, it was determined for this specific problem with $15^2$ CVs that $\alpha_\text{opt} \approx 1.3$ (given that it required the fewest iterations). The solve did not converge (with an attempted 1,000 iterations) for $\alpha = 1.4$. The requested figure showing the residuals follows in Figure \ref{fig:a}.
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=\linewidth]{../python/iterations}
-	\caption{Plot of the required iterations for each over relaxation factor.}
-	\label{fig:iterations}
+	\includegraphics[width=\linewidth]{../results/a}
+	\caption{Plot of the residual vs. iteration count for each relaxation parameter, $\alpha$.}
+	\label{fig:a}
 \end{figure}
 
 \subsection*{Part b}
 
-With a mesh refinement of $21^2, 25^2, 31^2,$ and $41^2$ CVs, the center temperature for each refinement is plotted below in Figure \ref{fig:center}.
+With a mesh refinement of $21^2, 25^2, 31^2,$ and $41^2$ CVs, the center temperature for each refinement with varying relaxation parameter $\alpha$ is plotted below in Figure \ref{fig:b-temps}. The same result is tabulated in Table \ref{tab:b-temps}.
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=\linewidth]{../python/center}
+	\includegraphics[width=\linewidth]{../results/b-temps}
 	\caption{Plot of the center temperature with mesh refinement.}
-	\label{fig:center}
+	\label{fig:b-temps}
+\end{figure}
+
+\def\arraystretch{1.3}
+\begin{table}[H]
+	\small
+	\centering
+	\caption{The temperature at the center of the plate with varying refinements and relaxation parameters.}
+	\vspace{0.2cm}
+	\begin{tabular}{c|c|c|c}
+		\hline
+		CVs & $\alpha = 1.0$ & $\alpha = 1.15$ & $\alpha = 1.30$ \\     
+		\hline
+		225  & 68.19568 & 68.19568 & 68.19568 \\
+		441  & 68.19919 & 68.19919 & 68.19919 \\
+		625  & 68.20026 & 68.20026 & 68.20026 \\
+		961  & 68.20116 & 68.20116 & 68.20116 \\
+		1681 & 68.20188 & 68.20188 & 68.20188
+	\end{tabular}
+	\label{table:results}
+\end{table}
+
+With refinement, the iteration requirement was plotted and is seen below in Figure \ref{fig:b-iterations}. No refinement levels converged for $\alpha = 1.4$ and only the 225 CV case converged for $\alpha = 1.35$.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\linewidth]{../results/b-iterations}
+	\caption{Plot of the required iterations with mesh refinement.}
+	\label{fig:b-iterations}
 \end{figure}
 
 \subsection*{Part c}
 
-With the final mesh refinement of $41^2$ CVs, a colored contour plot of the temperature solution follows in Figure \ref{fig:solution}.
+With the final mesh refinement of $41^2$ CVs, a colored contour plot of the temperature solution follows in Figure \ref{fig:c}.
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=0.7\linewidth]{../python/solution}
+	\includegraphics[width=0.7\linewidth]{../results/c}
 	\caption{Plot of the solution with $41^2$ CVs.}
-	\label{fig:solution}
+	\label{fig:c}
 \end{figure}
 
 \section*{Code listing}
 
+For the implementation, we have the following files:
+\begin{itemize}
+	\item \texttt{Makefile} -- Allows for compiling the c++ project with \texttt{make}.
+	\item \texttt{hwk3.cpp} -- Contains the \texttt{main()} function that is required by C that runs the cases requested in this problem set.
+	\item \texttt{Conduction2D.h} / \texttt{Conduction2D.cpp} -- Contains the \texttt{Conduction2D} class which is the solver for the 2D heat conduction problem required in this homework.
+	\item \texttt{Matrix.h} -- Contains the \texttt{Matrix} class which provides storage for a matrix with various standard matrix operations.
+	\item \texttt{TriDiagonal.h} -- Contains the \texttt{TriDiagonal} class which provides storage for a tri-diagonal matrix including the TDMA solver found in the member function \texttt{solveTDMA()}.
+	\item \texttt{plots.py} - Produces the plots in this report.
+\end{itemize}
+
 \subsection*{Makefile}
-\inputminted[fontsize=\small]{Makefile}{../cpp/Makefile}
+\inputminted[fontsize=\small]{Makefile}{../Makefile}
 
 \subsection*{hwk3.cpp}
-\inputminted[fontsize=\small]{c++}{../cpp/hwk3.cpp}
+\inputminted[fontsize=\small]{c++}{../hwk3.cpp}
 
 \subsection*{Conduction2D.h}
-\inputminted[fontsize=\small]{c++}{../cpp/Conduction2D.h}
+\inputminted[fontsize=\small]{c++}{../Conduction2D.h}
 
 \subsection*{Conduction2D.cpp}
-\inputminted[fontsize=\small]{c++}{../cpp/Conduction2D.cpp}
+\inputminted[fontsize=\small]{c++}{../Conduction2D.cpp}
 
 \subsection*{Matrix.h}
-\inputminted[fontsize=\small]{c++}{../cpp/Matrix.h}
+\inputminted[fontsize=\small]{c++}{../Matrix.h}
 
 \subsection*{TriDiagonal.h}
-\inputminted[fontsize=\small]{c++}{../cpp/TriDiagonal.h}
+\inputminted[fontsize=\small]{c++}{../TriDiagonal.h}
+
+\subsection*{plots.py}
+\inputminted[fontsize=\small]{python}{../plots.py}
 
 \end{document}

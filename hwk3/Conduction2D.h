@@ -1,19 +1,19 @@
 #ifndef CONDUCTION2D_H
 #define CONDUCTION2D_H
 
-#include <iostream>
-#include <iomanip>
 #include <cmath>
 #include <fstream>
+#include <iomanip>
+#include <iostream>
 
 #include "Matrix.h"
 #include "TriDiagonal.h"
 
- /**
-  * Solves a 2D heat conduction problem with dirichlet conditions on the top,
-  * left, bottom and with a zero-flux condition on the right with Nx x Ny
-  * internal control volumes.
-  */
+/**
+ * Solves a 2D heat conduction problem with dirichlet conditions on the top,
+ * left, bottom and with a zero-flux condition on the right with Nx x Ny
+ * internal control volumes.
+ */
 class Conduction2D {
 public:
   Conduction2D(unsigned int Nx, unsigned int Ny, double alpha, double Lx = 0.5,
@@ -23,10 +23,15 @@ public:
 
   void solve();
 
-  unsigned int getNx() { return Nx; }
-  unsigned int getNy() { return Ny; }
-  const Matrix & getT() const { return T; }
-  void save(std::string filename) const { T.save(filename); }
+  // Get the solution at the (i, j) internal node
+  const double getT(unsigned int i, unsigned int j) const { return T(i, j); }
+
+  // Get the residuals and number of iterations
+  const std::vector<double> &getResiduals() const { return residuals; }
+  unsigned int getNumIterations() { return residuals.size(); }
+
+  // Save the solution
+  void saveT(std::string filename) const { T.save(filename); }
 
 private:
   double computeResidual() const;
@@ -66,11 +71,13 @@ protected:
   // Precomputed matrices for the TDMA solves
   std::vector<TriDiagonal> pre_A_x, pre_A_y;
   // Precomputed RHS for the TDMA solves
-  std::vector<std::vector<double> > pre_b_x, pre_b_y;
+  std::vector<std::vector<double>> pre_b_x, pre_b_y;
   // Matrices for the TDMA solves
   TriDiagonal A_x, A_y;
   // RHS/solution vector for the TDMA solves
   std::vector<double> b_x, b_y;
+  // Residual for each iteration
+  std::vector<double> residuals;
 };
 
 #endif /* CONDUCTION2D_H */

@@ -45,7 +45,7 @@ void solveRod(unsigned int N) {
 
   // Solve system in place and save
   A.solveTDMA(b);
-  saveVectorCsv(b, "../results/theta_" + std::to_string(N) + ".csv");
+  saveVectorCsv(b, "results/theta_" + std::to_string(N) + ".csv");
 }
 
 int main() {

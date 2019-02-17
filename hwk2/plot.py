@@ -11,7 +11,7 @@ T0 = 100
 nodes = [81, 41, 21, 11, 6]
 for N in nodes:
     # Remember to add Tinf to all theta and append T0 to the first
-    T[N] = np.loadtxt('../results/theta_{}.csv'.format(N)) + Tinf
+    T[N] = np.loadtxt('results/theta_{}.csv'.format(N)) + Tinf
     T[N] = np.insert(T[N], 0, T0)
 
 # Plot results
@@ -26,4 +26,4 @@ plt.ylabel(r'$T$ ($^\circ$C)')
 plt.tight_layout()
 plt.grid()
 plt.legend()
-fig.savefig('result.pdf')
+fig.savefig('results/result.pdf')

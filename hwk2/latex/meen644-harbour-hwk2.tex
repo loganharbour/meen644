@@ -208,6 +208,17 @@ Use the two node formulation for the derivative term at $w(N)$ and the right bou
 	\Aboxed{- \frac{1}{\Delta x} \theta_{N-1} + \left(\frac{1}{2} m \Delta x + \frac{h}{k} + \frac{1}{\Delta x}\right) \theta_N & = 0\,.}
 \end{align}
 
+\subsubsection*{Summary}
+
+Putting the above into the $a_p, a_e, a_w$ formulation we have discussed in class, we have
+
+\[
+	\begin{cases}
+		a_p = m \Delta x + \frac{2}{\Delta x}\,, \qquad a_e = -\frac{1}{\Delta x}\,, & \text{left~boundary} \\
+		a_w = - \frac{1}{\Delta x} \,, \qquad a_p = m \Delta x + \frac{2}{\Delta x}\,,\qquad a_e = -\frac{1}{\Delta x}\quad~ & \text{interior} \\
+		a_w = - \frac{1}{\Delta x} \,, \qquad a_p = \frac{1}{2} m \Delta x + \frac{h}{k} + \frac{1}{\Delta x}\,, & \text{right~boundary}
+	\end{cases}
+\]
 \subsection*{TDMA}
 
 The system we are solving is of the form
@@ -236,7 +247,7 @@ The system we are solving is of the form
 		d_n
 	\end{bmatrix}\,.
 \]
-We will solve this system using the tridiagonal matrix algorithm (TDMA) given the fact that our system is positive definite. With our matrix in the form above, the algorithm follows in Algorithm \ref{alg:tdma}. Note that for the algorithm below, we are solving the solution vector $\vec{x}$ in-place with the vector $\vec{d}$. This algorithm is in the member function \texttt{solveTDMA()} in the \texttt{TriDiagonal} class, which stores the left hand side system in the vectors $\vec{a}, \vec{b}$, and $\vec{c}$.
+We will solve this system using the tridiagonal matrix algorithm (TDMA) given the fact that our system is positive definite. With our matrix in the form above, the algorithm follows in Algorithm \ref{alg:tdma}. Note that for the algorithm below, we are solving the solution vector $\vec{x}$ in-place with the vector $\vec{d}$. This algorithm is in the member function \texttt{solveTDMA()} in the \texttt{TriDiagonal} class, which stores the left hand side system in the vectors $\vec{a}, \vec{b}$, and $\vec{c}$ (denoted \texttt{A}, \texttt{B}, and \texttt{C} in the code, respectively).
 
 \begin{algorithm}[H]
 	\For{$i = 2, 3, \ldots, n$}{
@@ -259,7 +270,7 @@ The plotted results as requested follow below in Figure \ref{fig:results}. In ad
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=\linewidth]{../python/result}
+	\includegraphics[width=\linewidth]{../results/result}
 	\caption{The plotted solution.}
 	\label{fig:results}
 \end{figure}
@@ -286,16 +297,24 @@ The plotted results as requested follow below in Figure \ref{fig:results}. In ad
 
 \section*{Code listing}
 
-\subsection*{Makefile}
+For the implementation, we have the following files:
+\begin{itemize}
+	\item \texttt{Makefile} -- Allows for compiling the c++ project with \texttt{make}.
+	\item \texttt{hwk2.cpp} -- Contains the \texttt{main()} function that is required by C and contains the \texttt{solveRod()} function which solves the 1-D heat conduction problem.
+	\item \texttt{TriDiagonal.h} -- Contains the \texttt{TriDiagonal} class which provides storage for a tri-diagonal matrix including the TDMA solver found in the member function \texttt{solveTDMA()}.
+	\item \texttt{plots.py} - Produces the plot in this report.
+\end{itemize}
 
-\inputminted[fontsize=\small]{Makefile}{../cpp/Makefile}
+\subsection*{Makefile}
+\inputminted[fontsize=\footnotesize]{Makefile}{../Makefile}
 
 \subsection*{hwk2.cpp}
-
-\inputminted[fontsize=\small]{c++}{../cpp/hwk2.cpp}
+\inputminted[fontsize=\footnotesize]{c++}{../hwk2.cpp}
 
 \subsection*{TriDiagonal.h}
+\inputminted[fontsize=\footnotesize]{c++}{../TriDiagonal.h}
 
-\inputminted[fontsize=\small]{c++}{../cpp/TriDiagonal.h}
+\subsection*{plot.py}
+\inputminted[fontsize=\footnotesize]{python}{../plot.py}
 
 \end{document}

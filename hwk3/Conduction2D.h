@@ -23,6 +23,9 @@ public:
 
   void solve();
 
+  // See if this is solved/converged
+  bool converged() { return (residuals.size() != 0 && residuals.size() != max_its); }
+  
   // Get the solution at the (i, j) internal node
   const double getT(unsigned int i, unsigned int j) const { return T(i, j); }
 

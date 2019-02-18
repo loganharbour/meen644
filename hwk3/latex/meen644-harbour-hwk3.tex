@@ -109,7 +109,9 @@ The remaining equations are solved similarly but with slight differences dependi
 
 \subsection*{Solving method}
 
-The problem is to be solved by the line-by-line method. In specific, the sweeping arrangement is: \textbf{south to north, west to east, north to south, east to west}. In this method, the contribution from one direction in a given control volume is lagged and moved to the right hand side in order to solve a tri-diagonal system. Convergence is declared when
+The problem is to be solved by the line-by-line method. In specific, the sweeping arrangement is: \textbf{south to north, west to east, north to south, east to west}. In this method, the contribution from one direction in a given control volume is lagged and moved to the right hand side in order to solve a tri-diagonal system. For example, in a south to north sweep, a single row in the physical mesh is solved (integrated) at a time. The terms that are on the left hand side that come from CVs above and below the given row are lagged (not solved for, the most up-to-date solution is known) in order to move said terms to the right hand side. The resulting system of equations for a single row is a diagonally dominant tri-diagonal matrix, which allows for a quick solve. In the iteration process, the initial guess is the average of the Dirichlet boundary values.
+
+Convergence is declared when
 \begin{equation}
 	R = \sum_\text{CV} \left| a_p T_p - \sum_{\text{nb}} a_\text{nb} T_\text{nb} b_p\right|\leq 10^{-5}\,.
 \end{equation}
@@ -138,7 +140,7 @@ With the given range of $\alpha$, it was determined for this specific problem wi
 
 \subsection*{Part b}
 
-With a mesh refinement of $21^2, 25^2, 31^2,$ and $41^2$ CVs, the center temperature for each refinement with varying relaxation parameter $\alpha$ is plotted below in Figure \ref{fig:b-temps}. The same result is tabulated in Table \ref{tab:b-temps}.
+With a mesh refinement of $21^2, 25^2, 31^2,$ and $41^2$ CVs, the center temperature for each refinement with varying relaxation parameter $\alpha$ is plotted below in Figure \ref{fig:b-temps}. The same result is tabulated in Table \ref{table:b-temps}. Note the fact that to 6 digits the solution does not change for a given refinement with a change in $\alpha$. This is due to the fact that (providing the scheme converges to within the desired tolerance) relaxation will not change the solution significantly (to within the tolerance).
 
 \begin{figure}[H]
 	\centering
@@ -163,15 +165,15 @@ With a mesh refinement of $21^2, 25^2, 31^2,$ and $41^2$ CVs, the center tempera
 		961  & 68.20116 & 68.20116 & 68.20116 \\
 		1681 & 68.20188 & 68.20188 & 68.20188
 	\end{tabular}
-	\label{table:results}
+	\label{table:b-temps}
 \end{table}
 
-With refinement, the iteration requirement was plotted and is seen below in Figure \ref{fig:b-iterations}. No refinement levels converged for $\alpha = 1.4$ and only the 225 CV case converged for $\alpha = 1.35$.
+With refinement, the residuals were plotted below in Figure \ref{fig:b-iterations}. No refinement levels for $21^2$ CVs and above converged for $\alpha = 1.4$ and $\alpha = 1.35$.
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=\linewidth]{../results/b-iterations}
-	\caption{Plot of the required iterations with mesh refinement.}
+	\caption{Plot of the residual vs. iteration count for the more refined problems.}
 	\label{fig:b-iterations}
 \end{figure}
 

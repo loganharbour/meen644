@@ -10,13 +10,11 @@ plt.rc('font', family='serif')
 fig = plt.figure()
 fig.set_figwidth(9)
 fig.set_figheight(4)
-for file in glob.glob('results/a/*.csv'):
-    alpha = float(os.path.splitext(file)[0].split("/")[-1])
-    if alpha == 1.4:
-        continue
-    residuals = np.loadtxt(file)
+alphas = [1, 1.05, 1.1, 1.15, 1.2, 1.25, 1.3, 1.35]
+for alpha in alphas:
+    residuals = np.loadtxt('results/a/w{}.csv'.format(alpha))
     iterations = list(range(1, len(residuals) + 1))
-    plt.semilogy(iterations, residuals, '.-', linewidth=1,
+    plt.semilogy(iterations, residuals, '-', linewidth=1,
                  label=r'$\alpha = ${:.2f}'.format(alpha))
 plt.xlabel(r'Iteration count')
 plt.ylabel(r'Residual')
@@ -26,21 +24,27 @@ plt.grid()
 fig.savefig('results/a.pdf')
 
 # Problem b number of iterations
-fig = plt.figure()
-fig.set_figwidth(9)
-fig.set_figheight(4)
-alphas = [1.0, 1.05, 1.1, 1.15, 1.2, 1.25, 1.3, 1.35]
-for file in glob.glob('results/b-iterations/*.csv'):
-    N = int(os.path.splitext(file)[0].split("/")[-1])
-    iterations = np.loadtxt(file)
-    plt.plot(alphas[0:len(iterations)], iterations, '.-', linewidth=1,
-             label=r'{} CVs'.format(N * N))
-plt.xlabel(r'Relaxation parameter, $\alpha$')
-plt.ylabel(r'Iteration count')
-plt.legend()
-plt.tight_layout()
-plt.grid()
-fig.savefig('results/b-iterations.pdf')
+fig, ax = plt.subplots(2, 2)
+fig.set_figwidth(11)
+fig.set_figheight(8)
+alphas = [1, 1.05, 1.1, 1.15, 1.2, 1.25, 1.3]
+Ns = [[21, 25], [31, 41]]
+for i in range(2):
+    for j in range(2):
+        N = Ns[i][j]
+        for alpha in alphas:
+            residuals = np.loadtxt('results/b-iterations/N{}_w{}.csv'.format(N, alpha))
+            iterations = list(range(1, len(residuals) + 1))
+            ax[i][j].semilogy(iterations, residuals, '-', linewidth=1,
+                              label=r'$\alpha = ${:.2f}'.format(alpha))
+        ax[i][j].set_title('{} CVs'.format(N * N))
+        ax[i][j].grid()
+        if i == 1: ax[i][j].set_xlabel('Iteration count')
+        if j == 0: ax[i][j].set_ylabel('Residual')
+handles, labels = ax[1][1].get_legend_handles_labels()
+lgd = ax[1][1].legend(handles, labels, loc='lower center', bbox_to_anchor=(-0.2, -0.34),
+                      ncol=4, fontsize=9)
+fig.savefig('results/b-iterations.pdf', bbox_inches='tight', bbox_extra_artists=(lgd,))
 
 # Problem b temps
 fig = plt.figure()

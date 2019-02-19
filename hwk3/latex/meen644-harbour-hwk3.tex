@@ -31,7 +31,7 @@
 \usepackage[]{algorithm2e}
 \usepackage{float}
 \usepackage[cache=false]{minted}
-\renewcommand{\MintedPygmentize}{/Users/logan/miniconda/bin/pygmentize}
+\renewcommand{\MintedPygmentize}{/Users/loganharbour/miniconda/bin/pygmentize}
 \usepackage[scaled]{beramono}
 \usepackage[T1]{fontenc}
 
@@ -98,28 +98,34 @@ Now use the two node formulation for the derivative terms to obtain
 Collect like terms and modify the index to obtain
 \begin{equation}
 	\label{eq:internal}
-	T_{i,j} a_p - T_{i, j+1} a_n - T_{i+1, j} a_e - T_{i, j-1} a_s - T_{i-1, j} a_w = 0\,,\quad (i, j) \in [2, 3, \ldots, N - 1]^2\,,
+	T_{i,j} a_p - T_{i, j+1} a_n - T_{i+1, j} a_e - T_{i, j-1} a_s - T_{i-1, j} a_w = b\,,\quad (i, j) \in [2, 3, \ldots, N - 1]^2\,,
 \end{equation}
 where (note that the below applies only to \textit{internal} control volumes)
 \[
-	a_n \equiv \frac{k \Delta y}{\Delta x}\,, \quad a_e \equiv \frac{k \Delta x}{\Delta y}\,, \quad a_s \equiv \frac{k\Delta y}{\Delta x}\,, \quad a_w \equiv \frac{k\Delta x}{\Delta y}\,, \quad a_p \equiv a_n + a_e + a_s + a_w\,.
+	a_n \equiv \frac{k \Delta y}{\Delta x}\,, \quad a_e \equiv \frac{k \Delta x}{\Delta y}\,, \quad a_s \equiv \frac{k\Delta y}{\Delta x}\,, \quad a_w \equiv \frac{k\Delta x}{\Delta y}\,, \quad a_p \equiv a_n + a_e + a_s + a_w\,, \quad \text{and} \quad b = 0\,.
 \]
 
-The remaining equations are solved similarly but with slight differences depending on which boundary the CV is on; for example, for control volumes on the left boundary we instead have $a_w = 2 k \Delta y / \Delta x$.
+The remaining equations are solved similarly but with slight differences depending on which boundary the CV is on. For the boundary control volumes, we first assume the above are the coefficients with the equation given in Equation \eqref{eq:internal}. Next, the following changes are made; if the control volume is on the:
+\begin{itemize}
+	\item North surface, then $a_n = 2k \Delta  y / \Delta x$ and $T_{i, N+1} = T_T$ (known, moves to RHS),
+	\item East surface, then, $a_e = 0$ and $T_{N+1, j} = 0$,
+	\item South surface, then, $a_s = 2k \Delta y / \Delta x$ and $T_{i, 0} = T_B$ (known, moves to RHS),
+	\item West surface, then, $a_w = 2 k \Delta x / \Delta  y$ and $T_{0, j} = T_L$ (known, moves to RHS).
+\end{itemize}
 
 \subsection*{Solving method}
 
-The problem is to be solved by the line-by-line method. In specific, the sweeping arrangement is: \textbf{south to north, west to east, north to south, east to west}. In this method, the contribution from one direction in a given control volume is lagged and moved to the right hand side in order to solve a tri-diagonal system. For example, in a south to north sweep, a single row in the physical mesh is solved (integrated) at a time. The terms that are on the left hand side that come from CVs above and below the given row are lagged (not solved for, the most up-to-date solution is known) in order to move said terms to the right hand side. The resulting system of equations for a single row is a diagonally dominant tri-diagonal matrix, which allows for a quick solve. In the iteration process, the initial guess is the average of the Dirichlet boundary values.
+The problem is to be solved by the line-by-line method. In specific, the sweeping arrangement is: \textbf{south to north, west to east, north to south, east to west}. In this method, the contribution from one direction in a given control volume is lagged and moved to the right hand side in order to solve a tri-diagonal system. For example, in a south to north sweep, a single row in the physical mesh is solved (integrated) at a time. The terms that are on the left hand side that come from CVs above and below the given row are lagged (not solved for, the most up-to-date solution is known) in order to move said terms to the right hand side. The resulting system of equations for a single row is a diagonally dominant tri-diagonal matrix, which allows for a quick solve. In the iteration process, the initial guess is the average of the Dirichlet boundary values, $(T_B + T_L + T_T) / 3$.
 
 Convergence is declared when
 \begin{equation}
 	R = \sum_\text{CV} \left| a_p T_p - \sum_{\text{nb}} a_\text{nb} T_\text{nb} b_p\right|\leq 10^{-5}\,.
 \end{equation}
 
-Upon solving an individual system $Ax^{\ell + 1} = b$ with relaxation (where $\ell$ is the iteration index), the system is relaxed with the coefficient $\alpha$ by modifying it after construction by
+Upon solving an individual system $Ax^{\ell + 1} = b$ with relaxation (where $\ell$ is the iteration index, i.e., $x^\ell$ is the solution from the previous iteration), the system is relaxed with the coefficient $\alpha$ by modifying it after construction by
 \[
 	\begin{cases}
-		a_{ii} = a_{ii} / \alpha\,,\\
+		a_{ii} = a_{ii} \alpha^{-1}\,,\\
 		b_i = b_i + (\alpha^{-1} - 1) a_{ii} x_i^\ell\,,
 	\end{cases} \quad i = 1, \ldots, N\,,
 \]
@@ -129,7 +135,7 @@ and it is then solved using the standard TDMA algorithm.
 
 \subsection*{Part a}
 
-With the given range of $\alpha$, it was determined for this specific problem with $15^2$ CVs that $\alpha_\text{opt} \approx 1.3$ (given that it required the fewest iterations). The solve did not converge (with an attempted 1,000 iterations) for $\alpha = 1.4$. The requested figure showing the residuals follows in Figure \ref{fig:a}.
+With the given range of $\alpha$, it was determined for this specific problem with $15^2$ CVs that $\alpha_\text{opt} \approx 1.3$ (given that it required the fewest iterations). The solve did not converge (with an attempted 2,000 iterations) for $\alpha = 1.4$. The requested figure showing the residuals follows in Figure \ref{fig:a}.
 
 \begin{figure}[H]
 	\centering
@@ -153,7 +159,7 @@ With a mesh refinement of $21^2, 25^2, 31^2,$ and $41^2$ CVs, the center tempera
 \begin{table}[H]
 	\small
 	\centering
-	\caption{The temperature at the center of the plate with varying refinements and relaxation parameters.}
+	\caption{The center temperature ($^\circ$C) with varying refinements and relaxation parameters.}
 	\vspace{0.2cm}
 	\begin{tabular}{c|c|c|c}
 		\hline
@@ -168,7 +174,7 @@ With a mesh refinement of $21^2, 25^2, 31^2,$ and $41^2$ CVs, the center tempera
 	\label{table:b-temps}
 \end{table}
 
-With refinement, the residuals were plotted below in Figure \ref{fig:b-iterations}. No refinement levels for $21^2$ CVs and above converged for $\alpha = 1.4$ and $\alpha = 1.35$.
+With refinement, the residuals were plotted below in Figure \ref{fig:b-iterations}. No refinement levels for $21^2$ CVs and above converged for $\alpha = 1.35, 1.4$ with 2,000 maximum iterations.
 
 \begin{figure}[H]
 	\centering
@@ -179,7 +185,7 @@ With refinement, the residuals were plotted below in Figure \ref{fig:b-iteration
 
 \subsection*{Part c}
 
-With the final mesh refinement of $41^2$ CVs, a colored contour plot of the temperature solution follows in Figure \ref{fig:c}.
+With the final mesh refinement of $41^2$ CVs and $\alpha = 1$, a colored contour plot of the temperature solution follows in Figure \ref{fig:c}.
 
 \begin{figure}[H]
 	\centering

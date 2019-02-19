@@ -15,7 +15,7 @@ Conduction2D::Conduction2D(unsigned int Nx, unsigned int Ny, double w,
       // Solver properties
       w_inv(1.0 / w), tol(tol), max_its(max_its),
       // Initialize matrices and vectors
-      T(Nx, Ny, (T_L + T_T + T_B) / 3.0), pre_A_x(Ny, Nx), pre_A_y(Ny, Nx),
+      T(Nx, Ny, (T_L + T_T + T_B) / 3.0), pre_A_x(Ny, Nx), pre_A_y(Nx, Ny),
       pre_b_x(Ny, std::vector<double>(Nx)),
       pre_b_y(Nx, std::vector<double>(Ny)), A_x(Nx), A_y(Ny), b_x(Nx), b_y(Ny) {
 }

@@ -19,13 +19,15 @@ public:
   Conduction2D(unsigned int Nx, unsigned int Ny, double alpha, double Lx = 0.5,
                double Ly = 0.5, double k = 386.0, double T_L = 50.0,
                double T_T = 100.0, double T_B = 50.0, double tol = 1e-5,
-               unsigned int max_its = 1000);
+               unsigned int max_its = 2000);
 
   void solve();
 
   // See if this is solved/converged
-  bool converged() { return (residuals.size() != 0 && residuals.size() != max_its); }
-  
+  bool converged() {
+    return (residuals.size() != 0 && residuals.size() != max_its);
+  }
+
   // Get the solution at the (i, j) internal node
   const double getT(unsigned int i, unsigned int j) const { return T(i, j); }
 

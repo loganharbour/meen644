@@ -31,7 +31,7 @@
 \usepackage[]{algorithm2e}
 \usepackage{float}
 \usepackage[cache=false]{minted}
-\renewcommand{\MintedPygmentize}{/Users/loganharbour/miniconda/bin/pygmentize}
+\renewcommand{\MintedPygmentize}{/Users/logan/miniconda/bin/pygmentize}
 \usepackage[scaled]{beramono}
 \usepackage[T1]{fontenc}
 
@@ -82,45 +82,245 @@ where
 	k & \equiv 386~\text{W/m}~^\circ\text{C}\,, & L & \equiv 0.5~\text{m}\,.\\
 \end{align*}
 
-We discretize the region on $x \times y = [0, L]^2$ by $N^2$ internal nodes with $\Delta x = x / N, \Delta y = y / N$.
+We discretize the region on $x \times y = [0, L]^2$ by $N_x \times N_y = N^2$ internal nodes with $\Delta x = L / N_x, \Delta L = y / N_y$.
 
 \subsection*{Control volume equations}
 
-Integrate over an internal control volume $(i,j)$ to obtain
+Integrate over an internal control volume, $CV_\text{int}$ to obtain
 \begin{align*}
-	k \iint_{CV_{i, j}} \left[ \pdv{^2T}{x^2} + \pdv{^2T}{y^2} \right] dxdy & = 0\,, \quad (i, j) \in [2, 3, \ldots, N - 1]^2\,.\\
-	k \Delta y \left[ \pdv{T}{x}\Big|_{w_{i,j}} - \pdv{T}{x}\Big|_{e_{i,j}} \right] + k \Delta x \left[ \pdv{T}{y}\Big|_{n_{i,j}} - \pdv{T}{y}\Big|_{s_{i,j}} \right] & = 0\,, \quad (i, j) \in [2, 3, \ldots, N - 1]^2\,.
+	k \iint_{CV_\text{int}} \left[ \pdv{^2T}{x^2} + \pdv{^2T}{y^2} \right] dxdy & = 0\,,\\
+	k \Delta y \left[ \pdv{T}{x}\Big|_{w} - \pdv{T}{x}\Big|_{e} \right] + k \Delta x \left[ \pdv{T}{y}\Big|_{n} - \pdv{T}{y}\Big|_{s} \right] & = 0\,.
 \end{align*}
 Now use the two node formulation for the derivative terms to obtain
-\[
-	k \Delta y \left[\frac{T_{E_{ij}} - T_{P_{ij}}}{\Delta x} - \frac{T_{P_{ij}} - T_{W_{ij}}}{\Delta x}\right] + k \Delta x \left[ \frac{T_{N_{ij}} - T_{P_{ij}}}{\Delta y} -\frac{T_{P_{ij}} - T_{S_{ij}}}{\Delta y} \right] = 0\,, \quad (i, j) \in [2, 3, \ldots, N - 1]^2\,.
-\]
-Collect like terms and modify the index to obtain
 \begin{equation}
-	\label{eq:internal}
-	T_{i,j} a_p - T_{i, j+1} a_n - T_{i+1, j} a_e - T_{i, j-1} a_s - T_{i-1, j} a_w = b\,,\quad (i, j) \in [2, 3, \ldots, N - 1]^2\,,
+	\label{eq:two_node}
+	k \Delta y \left[\frac{T_{E} - T_{P}}{\Delta x} - \frac{T_{P} - T_{W}}{\Delta x}\right] + k \Delta x \left[ \frac{T_{N} - T_{P}}{\Delta y} -\frac{T_{P} - T_{S}}{\Delta y} \right] = 0\,.
 \end{equation}
+Note that for an internal control volume we have
+\[
+	\begin{cases}
+		T_P = T_{i,j} \\
+		T_N = T_{i,j+1} \\
+		T_E = T_{i+1,j} \\
+		T_S = T_{i,j-1} \\
+		T_W = T_{i-1,j}
+	\end{cases}\,, \qquad i = 2, 3, \ldots, N_x - 2, N_x - 1\,, \qquad j = 2, 3, \ldots, N_y - 2, N_y - 1\,,\\
+\]
+therefore we can represent Equation \eqref{eq:two_node} as
+\[
+	T_{i,j} a_p - T_{i, j+1} a_n - T_{i+1, j} a_e - T_{i, j-1} a_s - T_{i-1, j} a_w = 0\,,
+\]
 where (note that the below applies only to \textit{internal} control volumes)
 \[
-	a_n \equiv \frac{k \Delta y}{\Delta x}\,, \quad a_e \equiv \frac{k \Delta x}{\Delta y}\,, \quad a_s \equiv \frac{k\Delta y}{\Delta x}\,, \quad a_w \equiv \frac{k\Delta x}{\Delta y}\,, \quad a_p \equiv a_n + a_e + a_s + a_w\,, \quad \text{and} \quad b = 0\,.
+	a_n \equiv \frac{k \Delta y}{\Delta x}\,, \quad a_e \equiv \frac{k \Delta x}{\Delta y}\,, \quad a_s \equiv \frac{k\Delta y}{\Delta x}\,, \quad a_w \equiv \frac{k\Delta x}{\Delta y}\,, \quad \text{and} \quad a_p \equiv a_n + a_e + a_s + a_w\,.
 \]
 
-The remaining equations are solved similarly but with slight differences depending on which boundary the CV is on. For the boundary control volumes, we first assume the above are the coefficients with the equation given in Equation \eqref{eq:internal}. Next, the following changes are made; if the control volume is on the:
-\begin{itemize}
-	\item North surface, then $a_n = 2k \Delta  y / \Delta x$ and $T_{i, N+1} = T_T$ (known, moves to RHS),
-	\item East surface, then, $a_e = 0$ and $T_{N+1, j} = 0$,
-	\item South surface, then, $a_s = 2k \Delta y / \Delta x$ and $T_{i, 0} = T_B$ (known, moves to RHS),
-	\item West surface, then, $a_w = 2 k \Delta x / \Delta  y$ and $T_{0, j} = T_L$ (known, moves to RHS).
-\end{itemize}
+After studying the boundary conditions, we can also produce the general control volume equation
+\begin{multline}
+	\label{eq:CV}
+	T_{i,j} a_{p,i,j} - T_{i, j+1} a_{n,i,j} - T_{i+1, j} a_{e,i,j} - T_{i, j-1} a_{s,i,j} - T_{i-1, j} a_{w,i,j} = 0\,,\\ i = 1, 2, \ldots, N_x - 1, N_x\,, \quad j = 1, 2, \ldots, N_y - 1, N_y\,,
+\end{multline}
+where
+\begin{align*}
+	a_{n,i,j} & = \begin{cases}
+		\frac{2 k \Delta y}{\Delta x}\,, & j = N_y \\
+		\frac{k \Delta y}{\Delta }\,, & j < N_y
+	\end{cases}\,, \\
+	a_{e,i,j} & = \begin{cases}
+		0\,, & i = N_x \\
+		\frac{k \Delta  x}{\Delta y}\,, & i < N_x
+	\end{cases}\,, \\
+	a_{s,i,j} & = \begin{cases}
+		\frac{2 k \Delta y}{\Delta x}\,, & j = 0 \\
+		\frac{k \Delta y}{\Delta x}\,, & j > 0
+	\end{cases}\,, \\
+	a_{w,i,j} & = \begin{cases}
+		\frac{2 k \Delta x}{\Delta y}\,, & i = 0 \\
+		\frac{k \Delta x}{\Delta y}\,, & i > 0
+	\end{cases}\,, \\
+	a_{p,i,j} & = a_{n,i,j} + a_{e,i,j} + a_{s,i,j} + a_{w,i,j}\,, \\
+	T_{i, N+1} & = T_T\,, \\
+	T_{N+1, j} & = 0\,, \\
+	T_{i, 0} & = T_B\,, \\
+	T_{0,j} & = T_L\,.
+\end{align*}
 
-\subsection*{Solving method}
+\subsection*{Solving methodology}
 
-The problem is to be solved by the line-by-line method. In specific, the sweeping arrangement is: \textbf{south to north, west to east, north to south, east to west}. In this method, the contribution from one direction in a given control volume is lagged and moved to the right hand side in order to solve a tri-diagonal system. For example, in a south to north sweep, a single row in the physical mesh is solved (integrated) at a time. The terms that are on the left hand side that come from CVs above and below the given row are lagged (not solved for, the most up-to-date solution is known) in order to move said terms to the right hand side. The resulting system of equations for a single row is a diagonally dominant tri-diagonal matrix, which allows for a quick solve. In the iteration process, the initial guess is the average of the Dirichlet boundary values, $(T_B + T_L + T_T) / 3$.
+\subsubsection*{Line-by-line method}
 
-Convergence is declared when
+The problem is to be solved by the line-by-line method. In specific, the sweeping arrangement is: \textbf{south to north, west to east, north to south, east to west}. In this method, the contribution from one direction in a given control volume is lagged and moved to the right hand side in order to solve a tri-diagonal system. In the iteration process, the initial guess is the average of the Dirichlet boundary values, $(T_B + T_L + T_T) / 3$.
+
+To define the systems solved for each sweep, we first define $a_{x,i,j}$ as $a_x$ for control volume $(i, j)$. For example, $a_{p, i, j}$ is $a_p$ for control volume $(i, j)$. Secondly, $\ell$ is the iteration index. For example, $T_{i,j}^\ell$ is the temperature solution for control volume $(i, j)$ at iteration $\ell$.
+
+After a single solve has been made in a sweep, its solution is updated in the global solution such that the next solves have access to the latest values on the right hand side as necessary.
+
+\subsubsection*{South to north sweep}
+
+\def\arraystretch{1.4}
+
+First, define the left hand side matrix for mesh row $j$ as
+\begin{equation}
+	\label{eq:lhs_j}
+	\mathbf{A}_{s\to n, j} =
+	\begin{bmatrix}
+		a_{p,1,j} & a_{e,1,j} \\
+		a_{w,2,j} & a_{p,2,j} & a_{e,2,j} \\
+		& a_{w,3,j} & a_{p,3,j} & a_{e,3,j} \\
+		& & \ddots & \ddots & \ddots \\
+		& & &  a_{w, N_x - 2, j} & a_{p, N_x - 2, j} & a_{e, N_x - 2, j} \\
+		& & & & a_{w, N_x - 1, j} & a_{p, N_x - 1, j} & a_{e, N_x - 1, j} \\
+		& & & & & a_{w, N_x, j} & a_{p, N_x, j} \\
+	\end{bmatrix}\,,
+\end{equation}
+and define the solution vector for mesh row $j$ as
+\begin{equation}
+	\label{eq:rhs_j}
+	\vec{T}_{s\to n, j} =
+	\begin{bmatrix}
+		T_{1, j}^{\ell + 1} \\
+		T_{2, j}^{\ell + 1} \\
+		T_{3, j}^{\ell + 1} \\
+		\vdots \\
+		T_{N_x - 2, j}^{\ell + 1} \\
+		T_{N_x - 1, j}^{\ell + 1} \\
+		T_{N, j}^{\ell + 1}
+	\end{bmatrix}\,.
+\end{equation}
+
+The first solve of a south to north sweep is of the following system along the first mesh row:
+\begin{equation}
+	\label{eq:south_north_1}
+	\mathbf{A}_{s\to n, 1} \vec{T}_{s\to n, 1} = 
+	\begin{bmatrix}
+		a_{n,1,1} T_{1, 2}^\ell + a_{s,1,1} T_B + a_{w,1,1} T_L \\
+		a_{n,2,1} T_{2, 2}^\ell + a_{s,2,1} T_B \\
+		a_{n,3,1} T_{3, 2}^\ell + a_{s,3,1} T_B \\
+		\vdots \\
+		a_{n,N_x - 2,1} T_{N_x - 2, 2}^\ell + a_{s,N_x - 2,1} T_B \\
+		a_{n,N_x - 1,1} T_{N_x - 1, 2}^\ell + a_{s,N_x - 1,1} T_B \\
+		a_{n,N_x,1} T_{N_x, 2}^\ell + a_{s,N_x,1} T_B \\
+	\end{bmatrix}\,.
+\end{equation}
+The next set of solves is of the following system for each mesh row $j$ from $2$ to $N_y - 1$:
+\begin{equation}
+	\label{eq:south_north_2}
+	\mathbf{A}_{s\to n, j} \vec{T}_{s\to n, j} = 
+	\begin{bmatrix}
+		a_{n,1,j} T_{1, j + 1}^\ell + a_{s,1,j} T_{1, j - 1}^\ell + a_{w,1,j} T_L \\
+		a_{n,2,j} T_{2, j + 1}^\ell + a_{s,2,j} T_{2, j - 1}^\ell \\
+		a_{n,3,j} T_{3, j + 1}^\ell + a_{s,3,j} T_{3, j - 1}^\ell \\
+		\vdots \\
+		a_{n,N_x - 2,j} T_{N_x - 2, j+1}^\ell + a_{s,N_x - 2,j} T_{N_x - 2, j - 1}^\ell \\
+		a_{n,N_x - 1,j} T_{N_x - 1, j+1}^\ell + a_{s,N_x - 1,j} T_{N_x - 1, j - 1}^\ell \\
+		a_{n,N_x,j} T_{N_x, j+1}^\ell + a_{s,N_x,j} T_{N_x, j - 1}^\ell \\
+	\end{bmatrix}\,, \quad \forall ~ j = 2, \ldots, N_y - 1\,.
+\end{equation}
+The last solve of a south to north sweep is of the following system along the last mesh row:
+\begin{equation}
+	\label{eq:south_north_3}
+	\mathbf{A}_{s\to n, N_y} \vec{T}_{s\to n, N_y} = 
+	\begin{bmatrix}
+		a_{n,1,N_y} T_T + a_{s,1,N_y} T_{1, N_y - 1} + a_{w,1,N_y} T_L \\
+		a_{n,2,N_y} T_T + a_{s,2,N_y} T_{2, N_y - 1} \\
+		a_{n,3,N_y} T_T + a_{s,3,N_y} T_{3, N_y - 1} \\
+		\vdots \\
+		a_{n,N_x - 2,N_y} T_T + a_{s,N_x - 2,1} T_{N_x - 2, N_y - 1} \\
+		a_{n,N_x - 1,N_y} T_T + a_{s,N_x - 1,1} T_{N_x - 1, N_y - 1} \\
+		a_{n,N_x,N_y} T_{N_x, 2}^\ell + a_{s,N_x,1} T_{N_x, N_y - 1} \\
+	\end{bmatrix}\,.
+\end{equation}
+
+\subsubsection*{East to west sweep}
+
+Similarly, define the left hand side matrix for mesh column $i$ as
+\begin{equation}
+	\label{eq:lhs_i}
+	\mathbf{A}_{e\to w, i} =
+	\begin{bmatrix}
+		a_{p,i,1} & a_{n,i,1} \\
+		a_{s,i,2} & a_{p,i,2} & a_{n,i,2} \\
+		& a_{s,i,3} & a_{p,i,3} & a_{n,i,3} \\
+		& & \ddots & \ddots & \ddots \\
+		& & &  a_{s, i, N_y - 2} & a_{p, i, N_y - 1} & a_{n, i, N_y - 1} \\
+		& & & & a_{s, i, N_y - 1} & a_{p, i, N_y - 1} & a_{n, i, N_y - 1} \\
+		& & & & & a_{s, i, 1} & a_{p, i, N_y} \\
+	\end{bmatrix}\,,
+\end{equation}
+and define the solution vector for mesh column $i$ as
+\begin{equation}
+	\label{eq:rhs_i}
+	\vec{T}_{e\to w, i} =
+	\begin{bmatrix}
+		T_{i, 1}^{\ell + 1} \\
+		T_{i, 2}^{\ell + 1} \\
+		T_{i, 3}^{\ell + 1} \\
+		\vdots \\
+		T_{i, N_y - 2}^{\ell + 1} \\
+		T_{i, N_y - 1}^{\ell + 1} \\
+		T_{i, N_y}^{\ell + 1}
+	\end{bmatrix}\,.
+\end{equation}
+
+The first solve of a east to west sweep is of the following system along the first mesh column:
+\begin{equation}
+	\label{eq:east_west_1}
+	\mathbf{A}_{e\to w, 1} \vec{T}_{e\to w, 1} = 
+	\begin{bmatrix}
+		a_{w,1,1} T_L + a_{e, 1, 1} T_{2, 1}^\ell + a_{s, 1, 1} T_B \\
+		a_{w,1,2} T_L + a_{e, 1, 2} T_{2, 2}^\ell \\
+		a_{w,1,3} T_L + a_{e, 1, 3} T_{2, 3}^\ell\\
+		\vdots \\
+		a_{w,1,N_y - 2} T_L + a_{e, 1, N_y - 2} T_{2, N_y - 2}^\ell \\
+		a_{w,1,N_y - 1} T_L + a_{e, 1, N_y - 1} T_{2, N_y - 1}^\ell\\
+		a_{w,1,N_y} T_L +  a_{e, 1, N_y} T_{2, N_y}^\ell + a_{n, 1, N_y} T_T \\
+	\end{bmatrix}\,.
+\end{equation}
+The next set of solves is of the following system for each mesh column $i$ from $2$ to $N_x - 1$:
+\begin{equation}
+	\label{eq:east_west_2}
+	\mathbf{A}_{e\to w, i} \vec{T}_{e\to w, i} = 
+	\begin{bmatrix}
+		a_{w,i,1} T_{i-1, 1}^\ell + a_{e, i, 1} T_{i+1, 1}^\ell + a_{s, i, 1} T_B \\
+		a_{w,i,2} T_{i-1, 2}^\ell + a_{e, i, 2} T_{i+1, 2}^\ell \\
+		a_{w,i,3} T_{i-1, 3}^\ell + a_{e, i, 3} T_{i+1, 3}^\ell\\
+		\vdots \\
+		a_{w,i,N_y - 2} T_{i-1, N_y - 2}^\ell + a_{e, i, N_y - 2} T_{i+1, N_y - 2}^\ell \\
+		a_{w,i,N_y - 1} T_{i-1, N_y - 1}^\ell + a_{e, i, N_y - 1} T_{i+1, N_y - 1}^\ell\\
+		a_{w,i,N_y} T_{i-1, N_y}^\ell + a_{e, i, N_y} T_{i+1, N_y}^\ell + a_{n, i, N_y} T_T \\
+	\end{bmatrix}\,, \quad \forall ~ i = 2, \ldots, N_x - 1\,.
+\end{equation}
+The last solve of a south to north sweep is of the following system along the last mesh column:
+\begin{equation}
+	\label{eq:east_west_3}
+	\mathbf{A}_{e\to w, N_x} \vec{T}_{e\to w, N_x} = 
+	\begin{bmatrix}
+		a_{w,N_x,1} T_{N_x-1, 1}^\ell + a_{s, N_x, 1} T_B \\
+		a_{w,N_x,2} T_{N_x-1, 2}^\ell \\
+		a_{w,N_x,3} T_{N_x-1, 3}^\ell \\
+		\vdots \\
+		a_{w,N_x,N_y - 2} T_{N_x-1, N_y - 2}^\ell \\
+		a_{w,N_x,N_y - 1} T_{N_x-1, N_y - 1}^\ell \\
+		a_{w,N_x,N_y} T_{N_x-1, N_y}^\ell + a_{n, N_x, N_y} T_T \\
+	\end{bmatrix}\,.
+\end{equation}
+
+\subsubsection*{North to south sweep}
+
+The north to south sweep is the same as the south to north sweep, except the systems are solved in backwards order. The order is then mesh rows $[N_y, N_y - 1, N_y - 2, \ldots, 2, 1]$.
+
+\subsubsection*{West to east sweep}
+
+The west to east sweep is the same as the east to west sweep, except in backwards order. The order is then mesh columns $[N_x, N_x - 1, N_x - 2, \ldots, 2, 1]$.
+
+\subsubsection*{Convergence}
+
+The solve is checked for convergence after all four sweeps (south to north, west to east, north to south, and east to west) have completed. The criteria is
 \begin{equation}
 	R = \sum_\text{CV} \left| a_p T_p - \sum_{\text{nb}} a_\text{nb} T_\text{nb} b_p\right|\leq 10^{-5}\,.
 \end{equation}
+
+\subsubsection*{Relaxation}
 
 Upon solving an individual system $Ax^{\ell + 1} = b$ with relaxation (where $\ell$ is the iteration index, i.e., $x^\ell$ is the solution from the previous iteration), the system is relaxed with the coefficient $\alpha$ by modifying it after construction by
 \[
@@ -208,24 +408,24 @@ For the implementation, we have the following files:
 \end{itemize}
 
 \subsection*{Makefile}
-\inputminted[fontsize=\small]{Makefile}{../Makefile}
+\inputminted[fontsize=\footnotesize]{Makefile}{../Makefile}
 
 \subsection*{hwk3.cpp}
-\inputminted[fontsize=\small]{c++}{../hwk3.cpp}
+\inputminted[fontsize=\footnotesize]{c++}{../hwk3.cpp}
 
 \subsection*{Conduction2D.h}
-\inputminted[fontsize=\small]{c++}{../Conduction2D.h}
+\inputminted[fontsize=\footnotesize]{c++}{../Conduction2D.h}
 
 \subsection*{Conduction2D.cpp}
-\inputminted[fontsize=\small]{c++}{../Conduction2D.cpp}
+\inputminted[fontsize=\footnotesize]{c++}{../Conduction2D.cpp}
 
 \subsection*{Matrix.h}
-\inputminted[fontsize=\small]{c++}{../Matrix.h}
+\inputminted[fontsize=\footnotesize]{c++}{../Matrix.h}
 
 \subsection*{TriDiagonal.h}
-\inputminted[fontsize=\small]{c++}{../TriDiagonal.h}
+\inputminted[fontsize=\footnotesize]{c++}{../TriDiagonal.h}
 
 \subsection*{plots.py}
-\inputminted[fontsize=\small]{python}{../plots.py}
+\inputminted[fontsize=\footnotesize]{python}{../plots.py}
 
 \end{document}

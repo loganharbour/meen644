@@ -31,7 +31,7 @@
 \usepackage[]{algorithm2e}
 \usepackage{float}
 \usepackage[cache=false]{minted}
-\renewcommand{\MintedPygmentize}{/Users/logan/miniconda/bin/pygmentize}
+\renewcommand{\MintedPygmentize}{/Users/loganharbour/miniconda/bin/pygmentize}
 \usepackage[scaled]{beramono}
 \usepackage[T1]{fontenc}
 
@@ -72,19 +72,19 @@ With two-dimensional heat conduction with constant material properties, insulati
 		k \pdv{^2T}{x^2} + k \pdv{^2T}{y^2} = 0\,,\\
 		T(x, 0) = T_B\,,\\
 		T(0, y) = T_L\,,\\
-		T(0, L) = T_T\,,\\
-		-k \pdv{T}{x} \Big|_{x = L} = 0\,,
+		T(0, L_y) = T_T\,,\\
+		-k \pdv{T}{x} \Big|_{x = L_x} = 0\,,
 	\end{cases}
 \end{equation}
 where
 \begin{align*}
 	T_B & \equiv 50~^\circ\text{C}\,, & T_L & \equiv 50~^\circ\text{C}\,, & T_T & \equiv 100~^\circ\text{C}\,.\\
-	k & \equiv 386~\text{W/m}~^\circ\text{C}\,, & L & \equiv 0.5~\text{m}\,.\\
+	k & \equiv 386~\text{W/m}~^\circ\text{C}\,, & L_x & \equiv 0.5~\text{m}\,, & L_y & \equiv 0.5~\text{m}\,.\\
 \end{align*}
 
-We discretize the region on $x \times y = [0, L]^2$ by $N_x \times N_y = N^2$ internal nodes with $\Delta x = L / N_x, \Delta L = y / N_y$.
-
 \subsection*{Control volume equations}
+
+We discretize the region on $x \times y = [0, L_x] \times [0, L_y] = [0,L]^2$ by $N_x \times N_y = N^2$ internal nodes with $\Delta x = L_x / N_x, \Delta y =  L_y / N_y$.
 
 Integrate over an internal control volume, $CV_\text{int}$ to obtain
 \begin{align*}
@@ -94,7 +94,7 @@ Integrate over an internal control volume, $CV_\text{int}$ to obtain
 Now use the two node formulation for the derivative terms to obtain
 \begin{equation}
 	\label{eq:two_node}
-	k \Delta y \left[\frac{T_{E} - T_{P}}{\Delta x} - \frac{T_{P} - T_{W}}{\Delta x}\right] + k \Delta x \left[ \frac{T_{N} - T_{P}}{\Delta y} -\frac{T_{P} - T_{S}}{\Delta y} \right] = 0\,.
+	k \Delta y \left[\frac{T_{E} - T_{P}}{\delta x} - \frac{T_{P} - T_{W}}{\delta x}\right] + k \Delta x \left[ \frac{T_{N} - T_{P}}{\delta y} -\frac{T_{P} - T_{S}}{\delta y} \right] = 0\,.
 \end{equation}
 Note that for an internal control volume we have
 \[
@@ -112,10 +112,10 @@ therefore we can represent Equation \eqref{eq:two_node} as
 \]
 where (note that the below applies only to \textit{internal} control volumes)
 \[
-	a_n \equiv \frac{k \Delta y}{\Delta x}\,, \quad a_e \equiv \frac{k \Delta x}{\Delta y}\,, \quad a_s \equiv \frac{k\Delta y}{\Delta x}\,, \quad a_w \equiv \frac{k\Delta x}{\Delta y}\,, \quad \text{and} \quad a_p \equiv a_n + a_e + a_s + a_w\,.
+	a_n \equiv \frac{k \Delta x}{\delta y}\,, \quad a_e \equiv \frac{k \Delta y}{\delta x}\,, \quad a_s \equiv \frac{k\Delta x}{\delta y}\,, \quad a_w \equiv \frac{k\Delta y}{\delta x}\,, \quad \text{and} \quad a_p \equiv a_n + a_e + a_s + a_w\,.
 \]
 
-After studying the boundary conditions, we can also produce the general control volume equation
+After studying the boundary conditions and noting that $\delta x = \Delta x, \delta y = \Delta y$, we can also produce the general control volume equation
 \begin{multline}
 	\label{eq:CV}
 	T_{i,j} a_{p,i,j} - T_{i, j+1} a_{n,i,j} - T_{i+1, j} a_{e,i,j} - T_{i, j-1} a_{s,i,j} - T_{i-1, j} a_{w,i,j} = 0\,,\\ i = 1, 2, \ldots, N_x - 1, N_x\,, \quad j = 1, 2, \ldots, N_y - 1, N_y\,,
@@ -123,20 +123,20 @@ After studying the boundary conditions, we can also produce the general control 
 where
 \begin{align*}
 	a_{n,i,j} & = \begin{cases}
-		\frac{2 k \Delta y}{\Delta x}\,, & j = N_y \\
-		\frac{k \Delta y}{\Delta }\,, & j < N_y
+		\frac{2 k \Delta x}{\Delta y}\,, & j = N_y \\
+		\frac{k \Delta x}{\Delta y}\,, & j < N_y
 	\end{cases}\,, \\
 	a_{e,i,j} & = \begin{cases}
 		0\,, & i = N_x \\
-		\frac{k \Delta  x}{\Delta y}\,, & i < N_x
+		\frac{k \Delta  y}{\Delta x}\,, & i < N_x
 	\end{cases}\,, \\
 	a_{s,i,j} & = \begin{cases}
-		\frac{2 k \Delta y}{\Delta x}\,, & j = 0 \\
-		\frac{k \Delta y}{\Delta x}\,, & j > 0
+		\frac{2 k \Delta x}{\Delta y}\,, & j = 0 \\
+		\frac{k \Delta x}{\Delta y}\,, & j > 0
 	\end{cases}\,, \\
 	a_{w,i,j} & = \begin{cases}
-		\frac{2 k \Delta x}{\Delta y}\,, & i = 0 \\
-		\frac{k \Delta x}{\Delta y}\,, & i > 0
+		\frac{2 k \Delta y}{\Delta x}\,, & i = 0 \\
+		\frac{k \Delta y}{\Delta x}\,, & i > 0
 	\end{cases}\,, \\
 	a_{p,i,j} & = a_{n,i,j} + a_{e,i,j} + a_{s,i,j} + a_{w,i,j}\,, \\
 	T_{i, N+1} & = T_T\,, \\

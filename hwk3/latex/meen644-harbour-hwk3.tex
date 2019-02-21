@@ -89,12 +89,12 @@ We discretize the region on $x \times y = [0, L_x] \times [0, L_y] = [0,L]^2$ by
 Integrate over an internal control volume, $CV_\text{int}$ to obtain
 \begin{align*}
 	k \iint_{CV_\text{int}} \left[ \pdv{^2T}{x^2} + \pdv{^2T}{y^2} \right] dxdy & = 0\,,\\
-	k \Delta y \left[ \pdv{T}{x}\Big|_{w} - \pdv{T}{x}\Big|_{e} \right] + k \Delta x \left[ \pdv{T}{y}\Big|_{n} - \pdv{T}{y}\Big|_{s} \right] & = 0\,.
+	k \Delta y \left[ \pdv{T}{x}\Big|_e - \pdv{T}{x}\Big|_w \right] + k \Delta x \left[ \pdv{T}{y}\Big|_{n} - \pdv{T}{y}\Big|_{s} \right] & = 0\,.
 \end{align*}
 Now use the two node formulation for the derivative terms to obtain
 \begin{equation}
 	\label{eq:two_node}
-	k \Delta y \left[\frac{T_{E} - T_{P}}{\delta x} - \frac{T_{P} - T_{W}}{\delta x}\right] + k \Delta x \left[ \frac{T_{N} - T_{P}}{\delta y} -\frac{T_{P} - T_{S}}{\delta y} \right] = 0\,.
+	k \Delta y \left[\frac{T_{E} - T_{P}}{\delta x_e} - \frac{T_{P} - T_{W}}{\delta x_w}\right] + k \Delta x \left[ \frac{T_{N} - T_{P}}{\delta y_n} -\frac{T_{P} - T_{S}}{\delta y_s} \right] = 0\,.
 \end{equation}
 Note that for an internal control volume we have
 \[
@@ -112,10 +112,10 @@ therefore we can represent Equation \eqref{eq:two_node} as
 \]
 where (note that the below applies only to \textit{internal} control volumes)
 \[
-	a_n \equiv \frac{k \Delta x}{\delta y}\,, \quad a_e \equiv \frac{k \Delta y}{\delta x}\,, \quad a_s \equiv \frac{k\Delta x}{\delta y}\,, \quad a_w \equiv \frac{k\Delta y}{\delta x}\,, \quad \text{and} \quad a_p \equiv a_n + a_e + a_s + a_w\,.
+	a_n \equiv \frac{k \Delta x}{\delta y_n}\,, \quad a_e \equiv \frac{k \Delta y}{\delta x_e}\,, \quad a_s \equiv \frac{k\Delta x}{\delta y_s}\,, \quad a_w \equiv \frac{k\Delta y}{\delta x_w}\,, \quad \text{and} \quad a_p \equiv a_n + a_e + a_s + a_w\,.
 \]
 
-After studying the boundary conditions and noting that $\delta x = \Delta x, \delta y = \Delta y$, we can also produce the general control volume equation
+After studying the boundary conditions and noting that $\delta x_e = \delta x_w = \Delta x, \delta y_n = \delta y_s = \Delta y$, we can also produce the general control volume equation
 \begin{multline}
 	\label{eq:CV}
 	T_{i,j} a_{p,i,j} - T_{i, j+1} a_{n,i,j} - T_{i+1, j} a_{e,i,j} - T_{i, j-1} a_{s,i,j} - T_{i-1, j} a_{w,i,j} = 0\,,\\ i = 1, 2, \ldots, N_x - 1, N_x\,, \quad j = 1, 2, \ldots, N_y - 1, N_y\,,

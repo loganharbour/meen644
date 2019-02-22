@@ -3,14 +3,6 @@
 #include <map>
 #include <sstream>
 
-template <typename T> void save(const std::vector<T> &v, std::string filename) {
-  std::ofstream f;
-  f.open(filename);
-  for (unsigned int i = 0; i < v.size(); ++i)
-    f << std::scientific << v[i] << std::endl;
-  f.close();
-}
-
 int main() {
   // Part a: change relaxation factor
   std::cout << "Part a" << std::endl;
@@ -23,7 +15,7 @@ int main() {
     if (problem.converged()) {
       std::stringstream filename;
       filename << boost::format("results/a/w%1%.csv") % w;
-      save(problem.getResiduals(), filename.str());
+      saveCSV(problem.getResiduals(), filename.str());
     }
   }
   std::cout << std::endl;
@@ -43,7 +35,7 @@ int main() {
       if (problem.converged()) {
         std::stringstream filename;
         filename << boost::format("results/b-iterations/N%1%_w%2%.csv") % N % w;
-        save(problem.getResiduals(), filename.str());
+        saveCSV(problem.getResiduals(), filename.str());
         temps[w].push_back(problem.getT((N - 1) / 2, (N - 1) / 2));
       }
 
@@ -54,7 +46,7 @@ int main() {
   }
   // Save temperatures for each alpha
   for (double w : {1.0, 1.15, 1.3})
-    save(temps[w], "results/b-temps/" + std::to_string(w) + ".csv");
+    saveCSV(temps[w], "results/b-temps/" + std::to_string(w) + ".csv");
 
   return 0;
 }

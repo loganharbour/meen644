@@ -81,7 +81,7 @@ void Conduction2D::precomputeProperties() {
 }
 
 void Conduction2D::precomputeRow(unsigned int j) {
-  TriDiagonal &A = pre_A_x[j];
+  TriDiagonal<double> &A = pre_A_x[j];
   std::vector<double> &b = pre_b_x[j];
 
   // First treat all as an internal volume
@@ -103,7 +103,7 @@ void Conduction2D::precomputeRow(unsigned int j) {
 }
 
 void Conduction2D::precomputeColumn(unsigned int i) {
-  TriDiagonal &A = pre_A_y[i];
+  TriDiagonal<double> &A = pre_A_y[i];
   std::vector<double> &b = pre_b_y[i];
 
   // First treat all as an internal volume

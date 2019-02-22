@@ -9,6 +9,14 @@
 #include "Matrix.h"
 #include "TriDiagonal.h"
 
+template <typename T> void saveCSV(const std::vector<T> &v, std::string filename) {
+  std::ofstream f;
+  f.open(filename);
+  for (unsigned int i = 0; i < v.size(); ++i)
+    f << std::scientific << v[i] << std::endl;
+  f.close();
+}
+
 /**
  * Solves a 2D heat conduction problem with dirichlet conditions on the top,
  * left, bottom and with a zero-flux condition on the right with Nx x Ny
@@ -61,7 +69,7 @@ protected:
   // Dirichlet oundary conditions (left, top, bottom) [C]
   const double T_L, T_T, T_B;
   // Properties stored in matrix form
-  Matrix a_p, a_n, a_e, a_s, a_w;
+  Matrix<double> a_p, a_n, a_e, a_s, a_w;
 
   // Inverse of the relaxation coefficient
   const double w_inv;
@@ -71,14 +79,14 @@ protected:
   const unsigned int max_its;
 
   // Temperature solution
-  Matrix T;
+  Matrix<double> T;
 
   // Precomputed matrices for the TDMA solves
-  std::vector<TriDiagonal> pre_A_x, pre_A_y;
+  std::vector<TriDiagonal<double>> pre_A_x, pre_A_y;
   // Precomputed RHS for the TDMA solves
   std::vector<std::vector<double>> pre_b_x, pre_b_y;
   // Matrices for the TDMA solves
-  TriDiagonal A_x, A_y;
+  TriDiagonal<double> A_x, A_y;
   // RHS/solution vector for the TDMA solves
   std::vector<double> b_x, b_y;
   // Residual for each iteration

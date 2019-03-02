@@ -1,0 +1,152 @@
+\documentclass{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx} % Allow image/pdf includes
+\usepackage{extramarks} % Extra header marks (continued on next page)
+\usepackage{amsmath} % Math enhancements
+\usepackage{amsthm} % Theorem typesetting
+\usepackage{amssymb} % Extended symbol collection
+\usepackage{tikz} % Graphical element creation
+\usetikzlibrary{automata,positioning}
+\usepackage{algpseudocode} % Algorithm layout
+\usepackage{enumitem} % Enumerate (lists)
+\usepackage{ragged2e} % Alternative alignment
+\usepackage{gensymb} % Generic symbols (degree, etc)
+\usepackage{empheq} % Allow \boxed around \begin{empheq}
+\usepackage{color,soul} % Highlighting
+\usepackage{booktabs} % Enhanced table creation
+\usepackage{multirow} % Table multi row
+\usepackage{mathtools} % Math enhancements
+\usepackage{bm} % Bold math
+\usepackage[mathscr]{euscript} % Script variables
+\usepackage{cancel} % Cancel through text
+\usepackage{color,soul} % Highlighting
+\usepackage{mathtools}
+\usepackage{multirow}
+\usepackage{mathrsfs}
+\usepackage{physics}
+\usepackage{gensymb}
+\usepackage{siunitx}
+\usepackage{subcaption}
+\usepackage[]{algorithm2e}
+\usepackage{float}
+\usepackage[cache=false]{minted}
+\renewcommand{\MintedPygmentize}{/Users/logan/miniconda/bin/pygmentize}
+\usepackage[scaled]{beramono}
+\usepackage[T1]{fontenc}
+
+\setlength\parindent{0pt} % No indents
+\setlength{\parskip}{1em} % Paragraph skip
+
+\newcommand{\vx}{\mathbf{x}} % x vector
+\newcommand{\vy}{\mathbf{y}} % x vector
+
+\newcommand{\pageTitle}{MEEN 644 - Homework 4}
+\newcommand{\pageAuthor}{Logan Harbour}
+
+\begin{document}
+
+\title{\LARGE \textbf{\pageTitle} \vspace{-0.3cm}}
+\author{\large \pageAuthor}
+\date{\vspace{-0.6cm} \large \today \vspace{-0.4cm}}
+
+\maketitle
+
+\section*{Problem statement}
+
+Consider a thin copper square plate of dimensions 0.5 m $\times$ 0.5 m. The temperature of the west and south edges are maintained at 50 $^\circ$C and the north edge is maintained at 100 $^\circ$C. The east edge is insulated. Using finite volume method, write a program to predict the steady-state temperature solution.
+
+\begin{enumerate}[label=(\alph*)]
+	\item \textbf{(35 points)} Set the over relaxation factor $\alpha$ from 1.00 to 1.40 in steps of 0.05 to identify $\alpha_\text{opt}$. Plot the number of iterations required for convergence for each $\alpha$.
+	\item \textbf{(15 points)} Solve the same problem using $21^2, 25^2, 31^2$, and $41^2$ CVs, respectively. Plot the temperature at the center of the plate (0.25 m, 0.25 m) vs CVs.
+	\item \textbf{(10 points)} Plot the steady state temperature contour in the 2D domain with the $41^2$ CV solution.
+\end{enumerate}
+
+\section*{Preliminaries}
+
+\subsection*{Two-dimensional heat conduction}
+
+With two-dimensional heat conduction with constant material properties, insulation on the right and prescribed temperatures on all other sides, we have the PDE
+\begin{equation}
+	\begin{cases}
+		k \pdv{^2T}{x^2} + k \pdv{^2T}{y^2} = 0\,,\\
+		T(x, 0) = T_B\,,\\
+		T(0, y) = T_L\,,\\
+		T(0, L_y) = T_T\,,\\
+		-k \pdv{T}{x} \Big|_{x = L_x} = 0\,,
+	\end{cases}
+\end{equation}
+where
+\begin{align*}
+	T_B & \equiv 50~^\circ\text{C}\,, & T_L & \equiv 50~^\circ\text{C}\,, & T_T & \equiv 100~^\circ\text{C}\,.\\
+	k & \equiv 386~\text{W/m}~^\circ\text{C}\,, & L_x & \equiv 0.5~\text{m}\,, & L_y & \equiv 0.5~\text{m}\,.\\
+\end{align*}
+
+\subsection*{Control volume equations}
+
+\begin{tikzpicture}[scale=2]
+	\tikzset{dimen/.style={<->,>=latex,thin,every rectangle node/.style={fill=white,midway,font=\small}}}
+	
+	\draw (0,0) -- (2,0) -- (2,2) -- (0, 2) -- cycle;
+	
+	\filldraw (1, 1) circle (1pt);
+	\filldraw (0, 1) circle (1pt);
+	\filldraw (1, 0) circle (1pt);
+	\filldraw (2, 1) circle (1pt);
+	\filldraw (1, 2) circle (1pt);
+	
+	\node[below] at (1, 1) {$P_{i, j}$};
+	%\foreach \i in {0, 1, 1.5}
+	%\draw (\i, -0.1) -- (\i, 0.1);
+	
+	%\foreach \i in {0.5, 1.5}
+	%\filldraw (\i, 0) circle (0.75pt);
+	
+	%\node[below] at (0.5, -0.05) {$\theta_{N-1}$};
+	%\node[below] at (1.5, -0.05) {$\theta_N$};
+	%\node[above] at (1.25, 0.4) {CV$_N$};
+	%\node[above] at (0.5, 0.4) {CV$_{N-1}$};
+	%\node[below] at (1.0, -0.1) {$w(N)$};
+	
+	%\draw [dimen] (0.5, 0.25) -- (1.5, 0.25) node {$\Delta x$};
+	%\draw [dimen] (0.0, -0.5) -- (1.0, -0.5) node {$\Delta x$};
+\end{tikzpicture}
+
+\subsection*{Solving methodology}
+
+\section*{Results}
+
+\section*{Code listing}
+
+For the implementation, we have the following files:
+\begin{itemize}
+	\item \texttt{Makefile} -- Allows for compiling the c++ project with \texttt{make}.
+	\item \texttt{hwk4.cpp} -- Contains the \texttt{main()} function that is required by C that runs the cases requested in this problem set.
+	\item \texttt{Flow2D.h} / \texttt{Flow2D.cpp} -- Contains the \texttt{Flow2D} class which is the solver for the 2D problem required in this homework.
+	\item \texttt{Matrix.h} -- Contains the \texttt{Matrix} class which provides storage for a matrix with various standard matrix operations.
+	\item \texttt{TriDiagonal.h} -- Contains the \texttt{TriDiagonal} class which provides storage for a tri-diagonal matrix including the TDMA solver found in the member function \texttt{solveTDMA()}.
+	\item \texttt{plots.py} - Produces the plots in this report.
+\end{itemize}
+
+\subsection*{Makefile}
+\inputminted[fontsize=\footnotesize]{Makefile}{../Makefile}
+
+\subsection*{hwk4.cpp}
+\inputminted[fontsize=\footnotesize]{c++}{../hwk4.cpp}
+
+\subsection*{Flow2D.h}
+\inputminted[fontsize=\footnotesize]{c++}{../Flow2D.h}
+
+\subsection*{Flow2D.cpp}
+\inputminted[fontsize=\footnotesize]{c++}{../Flow2D.cpp}
+
+\subsection*{Matrix.h}
+\inputminted[fontsize=\footnotesize]{c++}{../Matrix.h}
+
+\subsection*{TriDiagonal.h}
+\inputminted[fontsize=\footnotesize]{c++}{../TriDiagonal.h}
+
+\subsection*{plots.py}
+%\inputminted[fontsize=\footnotesize]{python}{../plots.py}
+
+\end{document}

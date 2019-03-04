@@ -53,6 +53,22 @@ public:
     B[N - 1] += b;
   }
 
+  // Setters for the top, middle, and bottom rows
+  void setTopRow(T b, T c) {
+    B[0] = b;
+    C[0] = c;
+  }
+  void setMiddleRow(unsigned int i, T a, T b, T c) {
+    assert(i < N - 1 && i != 0);
+    A[i] = a;
+    B[i] = b;
+    C[i] = c;
+  }
+  void setBottomRow(T a, T b) {
+    A[N - 1] = a;
+    B[N - 1] = b;
+  }
+
   // Getters for the raw vectors
   const std::vector<T> &getA() const { return A; }
   const std::vector<T> &getB() const { return B; }

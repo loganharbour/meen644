@@ -84,34 +84,251 @@ where
 
 \subsection*{Control volume equations}
 
-\begin{tikzpicture}[scale=2]
+\begin{tikzpicture}[scale=1, style={font=\footnotesize}]
 	\tikzset{dimen/.style={<->,>=latex,thin,every rectangle node/.style={fill=white,midway,font=\small}}}
 	
-	\draw (0,0) -- (2,0) -- (2,2) -- (0, 2) -- cycle;
+	\filldraw[red!7] (0,0) -- (2,0) -- (2,2) -- (0, 2) -- cycle;
+	\draw (-1.5, 0) -- (3.5, 0);
+	\draw (-1.5, 2) -- (3.5, 2);
+	\draw (0, -1.5) -- (0, 3.5);
+	\draw (2, -1.5) -- (2, 3.5);
 	
-	\filldraw (1, 1) circle (1pt);
-	\filldraw (0, 1) circle (1pt);
-	\filldraw (1, 0) circle (1pt);
-	\filldraw (2, 1) circle (1pt);
-	\filldraw (1, 2) circle (1pt);
+	\filldraw[red] (1, 1) circle (1.5pt);
+	\filldraw[blue] (0, 1) circle (1.5pt);
+	\filldraw[green!40!black] (1, 0) circle (1.5pt);
+	\filldraw[blue] (2, 1) circle (1.5pt);
+	\filldraw[green!40!black] (1, 2) circle (1.5pt);
+	\filldraw[red] (-1, 1) circle (1.5pt);
+	\filldraw[red] (3, 1) circle (1.5pt);
+	\filldraw[red] (1, 3) circle (1.5pt);
+	\filldraw[red] (1, -1) circle (1.5pt);
 	
-	\node[below] at (1, 1) {$P_{i, j}$};
-	%\foreach \i in {0, 1, 1.5}
-	%\draw (\i, -0.1) -- (\i, 0.1);
+	\draw [->,blue] (0, 1) -- (0.5, 1);
+	\draw [->,blue] (2, 1) -- (2.5, 1);
+	\draw [->,green!40!black] (1, 0) -- (1,0.5);
+	\draw [->,green!40!black] (1, 2) -- (1,2.5);
 	
-	%\foreach \i in {0.5, 1.5}
-	%\filldraw (\i, 0) circle (0.75pt);
+	\node[below, red] at (1, 1) {$P_{i, j}$};
+	\node[below, red] at (3, 1) {$P_{i+1, j}$};
+	\node[below, red] at (-1, 1) {$P_{i-1, j}$};
+	\node[below, red] at (1, 3) {$P_{i, j+1}$};
+	\node[below, red] at (1, -1) {$P_{i, j-1}$};
 	
-	%\node[below] at (0.5, -0.05) {$\theta_{N-1}$};
-	%\node[below] at (1.5, -0.05) {$\theta_N$};
-	%\node[above] at (1.25, 0.4) {CV$_N$};
-	%\node[above] at (0.5, 0.4) {CV$_{N-1}$};
-	%\node[below] at (1.0, -0.1) {$w(N)$};
-	
-	%\draw [dimen] (0.5, 0.25) -- (1.5, 0.25) node {$\Delta x$};
-	%\draw [dimen] (0.0, -0.5) -- (1.0, -0.5) node {$\Delta x$};
+	\node[above,blue] at (0.5, 1) {$u_{i-1,j}$};
+	\node[above,blue] at (2.5, 1) {$u_{i,j}$};
+	\node[below,green!40!black] at (1, 0) {$v_{i,j-1}$};
+	\node[below,green!40!black] at (1, 2) {$v_{i,j}$};
 \end{tikzpicture}
 
+\begin{tikzpicture}[scale=1, style={font=\small}]
+	\tikzset{dimen/.style={<->,>=latex,thin,every rectangle node/.style={fill=white,midway,font=\small}}}
+	
+	\filldraw[blue!7] (1,0) -- (3,0) -- (3,2) -- (1, 2) -- cycle;
+	\draw (-1, 0) -- (5, 0);
+	\draw (-1, 2) -- (5, 2);
+	\draw (0, -2) -- (0, 4);
+	\draw (2, -2) -- (2, 4);
+	\draw (4, -2) -- (4, 4);
+	
+	\filldraw[red] (1, 1) circle (1.5pt);
+	\filldraw[red] (3, 1) circle (1.5pt);
+	\filldraw[green!40!black] (1, 2) circle (1.5pt);
+	\filldraw[green!40!black] (1, 0) circle (1.5pt);
+	\filldraw[green!40!black] (3, 0) circle (1.5pt);
+	\filldraw[green!40!black] (3, 2) circle (1.5pt);
+	\filldraw[blue] (2, 1) circle (1.5pt);
+	\filldraw[blue] (4, 1) circle (1.5pt);
+	\filldraw[blue] (0, 1) circle (1.5pt);
+	\filldraw[blue] (2, 3) circle (1.5pt);
+	\filldraw[blue] (2, -1) circle (1.5pt);
+	
+	\draw [->,blue] (0, 1) -- (0.5, 1);
+	\draw [->,blue] (2, 1) -- (2.5, 1);
+	\draw [->,blue] (4, 1) -- (4.5, 1);
+	\draw [->,blue] (2, 3) -- (2.5, 3);
+	\draw [->,blue] (2, -1) -- (2.5, -1);
+	\draw [->,green!40!black] (1, 0) -- (1,0.5);
+	\draw [->,green!40!black] (1, 2) -- (1,2.5);
+	\draw [->,green!40!black] (3, 0) -- (3,0.5);
+	\draw [->,green!40!black] (3, 2) -- (3,2.5);
+	
+	\node[below, red] at (1, 1) {$P_{i, j}$};
+	\node[below, red] at (3, 1) {$P_{i+1, j}$};
+	
+	\node[above,blue] at (0.5, 1) {$u_{i-1,j}$};
+	\node[above,blue] at (2.5, 1) {$u_{i,j}$};
+	\node[above,blue] at (4.5, 1) {$u_{i+1,j}$};
+	\node[above,blue] at (2.5, 3) {$u_{i,j+1}$};
+	\node[above,blue] at (2.5, -1) {$u_{i,j-1}$};
+	\node[below,green!40!black] at (1, 0) {$v_{i,j-1}$};
+	\node[below,green!40!black] at (1, 2) {$v_{i,j}$};
+	\node[below,green!40!black] at (3, 0) {$v_{i+1,j-1}$};
+	\node[below,green!40!black] at (3, 2) {$v_{i+1,j}$};
+\end{tikzpicture}
+
+\begin{tikzpicture}[scale=1, style={font=\footnotesize}]
+	\tikzset{dimen/.style={<->,>=latex,thin,every rectangle node/.style={fill=white,midway,font=\small}}}
+	
+	\filldraw[green!40!black!7] (0,1) -- (2,1) -- (2,3) -- (0, 3) -- cycle;
+	\draw (-1.75, 0) -- (3.75, 0);
+	\draw (-1.75, 2) -- (3.75, 2);
+	\draw (-1.75, 4) -- (3.75, 4);
+	\draw (0, -1) -- (0, 5);
+	\draw (2, -1) -- (2, 5);
+	
+	\filldraw[red] (1, 1) circle (1.5pt);
+	\filldraw[red] (1, 3) circle (1.5pt);
+	\filldraw[blue] (0, 1) circle (1.5pt);
+	\filldraw[blue] (2, 1) circle (1.5pt);
+	\filldraw[blue] (0, 3) circle (1.5pt);
+	\filldraw[blue] (2, 3) circle (1.5pt);
+	\filldraw[green!40!black] (1, 0) circle (1.5pt);
+	\filldraw[green!40!black] (1, 2) circle (1.5pt);
+	\filldraw[green!40!black] (1, 4) circle (1.5pt);
+	\filldraw[green!40!black] (-1, 2) circle (1.5pt);
+	\filldraw[green!40!black] (3, 2) circle (1.5pt);
+	
+	\draw [->,blue] (0, 1) -- (0.5, 1);
+	\draw [->,blue] (2, 1) -- (2.5, 1);
+	\draw [->,blue] (0, 3) -- (0.5, 3);
+	\draw [->,blue] (2, 3) -- (2.5, 3);
+	\draw [->,green!40!black] (1, 0) -- (1,0.5);
+	\draw [->,green!40!black] (1, 2) -- (1,2.5);
+	\draw [->,green!40!black] (1, 4) -- (1, 4.5);
+	\draw [->,green!40!black] (-1, 2) -- (-1, 2.5);
+	\draw [->,green!40!black] (3, 2) -- (3, 2.5);
+	
+	\node[below, red] at (1, 1) {$P_{i, j}$};
+	\node[below, red] at (1, 3) {$P_{i, j+1}$};
+	\node[above,blue] at (0.5, 1) {$u_{i-1,j}$};
+	\node[above,blue] at (2.5, 1) {$u_{i,j}$};
+	\node[above,blue] at (0.65, 3) {$u_{i-1,j+1}$};
+	\node[above,blue] at (2.5, 3) {$u_{i,j+1}$};
+	\node[below,green!40!black] at (1, 2) {$v_{i,j}$};
+	\node[below,green!40!black] at (1, 0) {$v_{i,j-1}$};
+	\node[below,green!40!black] at (1, 4) {$v_{i,j+1}$};
+	\node[below,green!40!black] at (-1, 2) {$v_{i-1,j}$};
+	\node[below,green!40!black] at (3, 2) {$v_{i+1,j}$};
+\end{tikzpicture}
+
+\subsection*{Velocity update}
+
+Define the Pechlet number on each boundary of a control volume $c_{i,j}$ as
+\begin{equation}
+	P^{c_{i,j}}_b = \frac{F^{c_{i,j}}_b}{D^{c_{i,j}}_b} \,, \quad \text{where} \quad b = [n, e, s, w] \quad \text{and} \quad c = [u, v]\,,
+\end{equation}
+where
+\begin{subequations}
+	\begin{align}
+		D^{c_{i,j}}_n & = \frac{\Delta x \mu}{\Delta y}\,,\\
+		D^{c_{i,j}}_e & = \frac{\Delta y \mu}{\Delta x}\,,\\
+		D^{c_{i,j}}_s & = \frac{\Delta x \mu}{\Delta y}\,,\\
+		D^{c_{i,j}}_w & = \frac{\Delta y \mu}{\Delta x}\,.
+	\end{align}
+\end{subequations}
+
+\subsubsection*{$u$-velocity update}
+
+Integrating the x-momentum equation (with the guessed variables and neglecting the $\pdv{v^*}{x}$ term) an internal $u$-velocity control volume and using the power-law scheme, we obtain
+\begin{equation}
+	a^{u_{i,j}}_p u^*_{i,j} = a^{u_{i,j}}_n u^*_{i, j+1} + a^{u_{i,j}}_e u^*_{i+1, j} + a^{u_{i,j}}_s u^*_{i, j-1} + a^{u_{i,j}}_w u^*_{i-1, j} + \Delta y^{u_{i,j}} (p^*_{i,j} - p^*_{i+1, j})\,,
+\end{equation}
+where
+\begin{subequations}
+	\begin{align}
+		a^{u_{i,j}}_n & = D^{u_{i,j}}_n \max \left[0, (1 - 0.1 |P^{u_{i,j}}_n|)^5\right] + \max \left[ -F^{u_{i,j}}_n, 0 \right]\,, \\
+		a^{u_{i,j}}_e & = D^{u_{i,j}}_e \max \left[0, (1 - 0.1 |P^{u_{i,j}}_e|)^5\right] + \max \left[ -F^{u_{i,j}}_e, 0 \right]\,, \\
+		a^{u_{i,j}}_s & = D^{u_{i,j}}_s \max \left[0, (1 - 0.1 |P^{u_{i,j}}_s|)^5\right] + \max \left[ F^{u_{i,j}}_s, 0 \right]\,, \\
+		a^{u_{i,j}}_w & = D^{u_{i,j}}_w \max \left[0, (1 - 0.1 |P^{u_{i,j}}_w|)^5\right] + \max \left[ F^{u_{i,j}}_w, 0 \right]\,, \\
+		a^{u_{i,j}}_p & = a^{u_{i,j}}_n + a^{u_{i,j}}_e + a^{u_{i,j}}_s + a^{u_{i,j}}_w\,,
+	\end{align}
+\end{subequations}
+and
+\begin{subequations}
+	\begin{align}
+		F_n^{u_{i,j}} & = \frac{1}{2} \rho \Delta x^{u_{i,j}} \left(v_{i,j} + v_{i+1,j}\right)\,, \\
+		F_e^{u_{i,j}} & = \frac{1}{2} \rho \Delta y^{u_{i,j}} \left(u_{i,j} + u_{i+1,j}\right)\,, \\
+		F_s^{u_{i,j}} & = \frac{1}{2} \rho \Delta x^{u_{i,j}} \left(v_{i,j-1} + v_{i+1,j-1}\right)\,, \\
+		F_w^{u_{i,j}} & = \frac{1}{2} \rho \Delta y^{u_{i,j}} \left(u_{i-1,j} + u_{i,j}\right)\,.
+	\end{align}
+\end{subequations}
+
+There exist the following manipulations for the boundary control volumes:
+\begin{itemize}
+	\item On the left and right boundaries:
+	\begin{align}
+		D_n^{u_{i,j}} & = \frac{3 \Delta x \mu}{2 \Delta y}\,, \quad i = 1, M_x^u - 1\,, \quad 0 < j < M_y^u\,, \\
+		D_s^{u_{i,j}} & = \frac{3 \Delta x \mu}{2 \Delta y}\,, \quad i = 1, M_x^u - 1\,, \quad 0 < j < M_y^u\,,
+	\end{align}
+	\item On the right boundary:
+	\begin{align}
+		F_n^{u_{M_x^u - 1, j}} & = \frac{\rho \Delta x}{4} \left( 2 v_{M_y^v - 2, j} + 3 v_{M_y^v - 1, j} + v_{M_y^v, j} \right)\,,\quad 0 < j < M_y^u\,,\\
+		F_s^{u_{M_x^u - 1, j}} & = \frac{\rho \Delta x}{4} \left( 2 v_{M_y^v - 2, j-1} + 3 v_{M_y^v - 1, j-1} + v_{M_y^v, j-1} \right)\,,\quad 0 < j < M_y^u\,,\\
+		F_e^{u_{M_x^u - 1, 1}} & = \frac{\rho \Delta y}{2} \left( u_{M_x^u, 0} + u_{M_x^u, 1makmak} \right)\,,\\
+		F_e^{u_{M_x^u - 1, M_y^u - 1}} & = \frac{\rho \Delta y}{2} \left( u_{M_x^u, M_y^u} + u_{M_x^u, M_y^u - 1} \right)\,,\\
+		F_e^{u_{M_x^u - 1, j}} & = \rho \Delta y u_{M_x^u, j}\,, \quad 1 < j < M_y^u - 1\,,
+	\end{align}
+	\item On the left boundary:
+	\begin{align}
+		F_n^{u_{1, j}} & = \frac{\rho \Delta x}{4} \left( v_{0, j} + 2 v_{1, j} + 3 v_{2, j} \right)\,,\quad 0 < j < M_y^u\,,\\
+		F_s^{u_{1, j}} & = \frac{\rho \Delta x}{4} \left( v_{0, j-1} + 2 v_{1, j-1} + 3 v_{2, j-1} \right)\,,\quad 0 < j < M_y^u\,,\\
+		F_w^{u_{1, 1}} & = \frac{\rho \Delta y}{2} \left( u_{0, 0} + u_{0, 1} \right)\,,\\
+		F_w^{u_{1, M_y^u - 1}} & = \frac{\rho \Delta y}{2} \left( u_{0, M_y^u - 1} + u_{0, M_y^u} \right)\,,\\
+		F_w^{u_{1, j}} & = \rho \Delta y u_{0, j}\,, \quad 1 < M_y^u - 1 \,,
+	\end{align}
+\end{itemize}
+\subsubsection*{$v$-velocity update}
+
+Integrating the x-momentum equation (with the guessed variables and neglecting the $\pdv{vu^*}{y}$ term) an internal $v$-velocity control volume and using the power-law scheme, we obtain
+
+\begin{equation}
+	a^{v_{i,j}}_p v^*_{i,j} = a^{v_{i,j}}_n v^*_{i, j+1} + a^{v_{i,j}}_e v^*_{i+1, j} + a^{v_{i,j}}_s v^*_{i, j-1} + a^{v_{i,j}}_w v^*_{i-1, j} + \Delta x^{u_{i,j}} (p^*_{i,j} - p^*_{i, j+1})\,,
+\end{equation}
+where
+\begin{subequations}
+	\begin{align}
+	a^{v_{i,j}}_n & = D^{v_{i,j}}_n \max \left[0, (1 - 0.1 |P^{v_{i,j}}_n|)^5\right] + \max \left[ -F^{v_{i,j}}_n, 0 \right]\,, \\
+	a^{v_{i,j}}_e & = D^{v_{i,j}}_e \max \left[0, (1 - 0.1 |P^{v_{i,j}}_e|)^5\right] + \max \left[ -F^{v_{i,j}}_e, 0 \right]\,, \\
+	a^{v_{i,j}}_s & = D^{v_{i,j}}_s \max \left[0, (1 - 0.1 |P^{v_{i,j}}_s|)^5\right] + \max \left[ F^{v_{i,j}}_s, 0 \right]\,, \\
+	a^{v_{i,j}}_w & = D^{v_{i,j}}_w \max \left[0, (1 - 0.1 |P^{v_{i,j}}_w|)^5\right] + \max \left[ F^{v_{i,j}}_w, 0 \right]\,, \\
+	a^{v_{i,j}}_p & = a^{v_{i,j}}_n + a^{v_{i,j}}_e + a^{v_{i,j}}_s + a^{v_{i,j}}_w\,,
+	\end{align}
+\end{subequations}
+and
+\begin{subequations}
+	\begin{align}
+	F_n^{v_{i,j}} & = \frac{1}{2} \rho \Delta x^{v_{i,j}} \left(v_{i,j+1} + v_{i,j}\right)\,, \\
+	F_e^{v_{i,j}} & = \frac{1}{2} \rho \Delta y^{v_{i,j}} \left(u_{i,j} + u_{i,j+1}\right)\,, \\
+	F_s^{v_{i,j}} & = \frac{1}{2} \rho \Delta x^{v_{i,j}} \left(v_{i,j-1} + v_{i,j}\right)\,, \\
+	F_w^{v_{i,j}} & = \frac{1}{2} \rho \Delta y^{v_{i,j}} \left(u_{i-1,j} + u_{i-1,j+1}\right)\,.
+	\end{align}
+\end{subequations}
+
+There exist the following manipulations for the boundary control volumes:
+
+\begin{itemize}
+	\item On the top and bottom boundaries:
+	\begin{align}
+		D_e^{u_{i,j}} & = \frac{3 \Delta y \mu}{2 \Delta x}\,, \quad 0 < j < M_x^u\,, \quad j = 1, M_y^u - 1\,, \\
+		D_w^{u_{i,j}} & = \frac{3 \Delta y \mu}{2 \Delta x}\,, \quad 0 < j < M_x^u\,, \quad j = 1, M_y^u - 1\,,
+	\end{align}
+	\item On the top boundary:
+	\begin{align}
+		F_w^{v_{i, M_y^v - 1}} & = \frac{\rho \Delta y}{4} \left( u_{i - 1, M_y^u} + 2 u_{i - 1, M_y^u - 1} + 3 u_{i - 1, M_y^u - 2} \right)\,, \quad 0 < i < M_x^v\,, \\
+		F_e^{v_{i, M_y^v - 1}} & = \frac{\rho \Delta y}{4} \left( u_{i, M_y^u} + 2 u_{i, M_y^u - 1} + 3 u_{i, M_y^u - 2} \right)\,, \quad 0 < i < M_x^v\,, \\
+		F_n^{v_{0, M_y^v - 1}} & = \frac{\rho \Delta x}{2} \left( v_{0, M_y^v} + u_{1, M_y^v} \right) \,, \\
+		F_n^{v_{M_x^v - 1, M_y^v - 1}} & = \frac{\rho \Delta x}{2} \left( v_{M_x^v - 1, M_y^v} + v_{M_x^v, M_y^v} \right) \,, \\
+		F_n^{v_{i, M_y^v - 1}} & = \rho \Delta x v_{i, M_y^v}\,, \quad 1 < i < M_x^v - 1 \,, 
+	\end{align}
+	\item On the bottom boundary:
+	\begin{align}
+		F_w^{v_{i, 1}} & = \frac{\rho \Delta y}{4} \left( u_{i - 1, 0} + 2 u_{i - 1, 1} + 3 u_{i - 1, 2} \right)\,, \quad 0 < i < M_x^v\,, \\
+		F_e^{v_{i, 1}} & = \frac{\rho \Delta y}{4} \left( u_{i, 0} + 2 u_{i, 1} + 3 u_{i, 2} \right)\,, \quad 0 < i < M_x^v\,, \\
+		F_s^{v_{0, 1}} & = \frac{\rho \Delta x}{2} \left( v_{0, 0} + u_{1, 0} \right) \,, \\
+		F_s^{v_{M_x^v - 1, 1}} & = \frac{\rho \Delta x}{2} \left( v_{M_x^v - 1, 0} + v_{M_x^v, 0} \right) \,, \\
+		F_s^{v_{i, 1}} & = \rho \Delta x v_{i, 0}\,, \quad 1 < i < M_x^v - 1 \,, 
+	\end{align}
+\end{itemize}
 \subsection*{Solving methodology}
 
 \section*{Results}

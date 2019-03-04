@@ -10,7 +10,9 @@
 #include "TriDiagonal.h"
 
 template <typename T>
-void saveCSV(const std::vector<T> &v, std::string filename) {
+void
+saveCSV(const std::vector<T> & v, std::string filename)
+{
   std::ofstream f;
   f.open(filename);
   for (unsigned int i = 0; i < v.size(); ++i)
@@ -18,10 +20,32 @@ void saveCSV(const std::vector<T> &v, std::string filename) {
   f.close();
 }
 
-struct BoundaryCondition {
+struct BoundaryCondition
+{
   BoundaryCondition(double top, double right, double bottom, double left)
-      : top(top), right(right), bottom(bottom), left(left) {}
+    : top(top), right(right), bottom(bottom), left(left)
+  {
+  }
   double top, right, bottom, left;
+};
+
+struct Coefficients
+{
+  double p, n, e, s, w, b;
+};
+
+struct MatrixCoefficients
+{
+  MatrixCoefficients(unsigned int Nx, unsigned int Ny) : vals(Nx, Ny) {}
+  Coefficients & operator()(unsigned int i, unsigned int j) { return vals(i, j); }
+  Matrix<Coefficients> vals;
+};
+
+enum Equations
+{
+  u,
+  v,
+  pc
 };
 
 /**
@@ -29,60 +53,71 @@ struct BoundaryCondition {
  * left, bottom and with a zero-flux condition on the right with Nx x Ny
  * internal control volumes.
  */
-class Flow2D {
+class Flow2D
+{
 public:
-  Flow2D(unsigned int Nx, unsigned int Ny, double Lx, double Ly,
-         BoundaryCondition u_BC, BoundaryCondition v_BC, double rho, double k,
-         double mu, double C_p, unsigned int max_its = 1000);
+  Flow2D(unsigned int Nx,
+         unsigned int Ny,
+         double Lx,
+         double Ly,
+         BoundaryCondition u_BC,
+         BoundaryCondition v_BC,
+         double rho,
+         double mu,
+         unsigned int max_its = 1000);
 
   void solve();
-
   // See if this is solved/converged
-  bool converged() {
-    return (residuals.size() != 0 && residuals.size() != max_its);
-  }
+  bool converged() { return (residuals.size() != 0 && residuals.size() != max_its); }
 
   // Get the residuals and number of iterations
-  const std::vector<double> &getResiduals() const { return residuals; }
+  const std::vector<double> & getResiduals() const { return residuals; }
   unsigned int getNumIterations() { return residuals.size(); }
 
 private:
-  double computeResidual() const;
-
-  // Precompute operations
-  void precomputeProperties();
-  void precomputeColumn(unsigned int col);
-  void precomputeRow(unsigned int row);
+  void correct();
+  void fillBCs();
+  void filluCoefficients();
+  void fillvCoefficients();
+  void fillpcCoefficients();
+  void solve(Equations eq);
 
   // Solve and sweep operations
-  void solveColumn(unsigned int col);
-  void solveRow(unsigned int row);
+  void solveVelocities();
+  void solveColumn(unsigned int i, Equations equation);
+  void solveRow(unsigned int j, Equations equation);
 
 protected:
-  // Number of interior nodal points in the x and y-dimensions
+  // Number of pressure CVs
   const unsigned int Nx, Ny;
+  // Maximum nodal values
+  const unsigned int Mx_u, My_u, Mx_v, My_v, Mx_p, My_p;
 
   // Geometry [m]
   const double Lx, Ly, dx, dy;
   // Boundary conditions
   const BoundaryCondition u_BC, v_BC;
   // Material properties
-  const double rho, k, mu, C_p;
-  // Properties stored in matrix form
-  Matrix<double> a_p, a_n, a_e, a_s, a_w;
+  const double rho, mu;
+  // Coefficient matrices
+  MatrixCoefficients a_u, a_v, a_pc;
 
   // Maximum iterations
   const unsigned int max_its;
+  // Relaxation coefficients
+  const double w_uv, alpha_p;
 
   // Velocity solutions
   Matrix<double> u, v;
   // Pressure solution
-  Matrix<double> P;
+  Matrix<double> p;
+  // Pressure corrector solution
+  Matrix<double> pc;
 
-  // Matrices for the TDMA solves
-  TriDiagonal<double> A_x, A_y;
-  // RHS/solution vector for the TDMA solves
-  std::vector<double> b_x, b_y;
+  // Matrices and vectors for sweeping
+  TriDiagonal<double> Ax_u, Ay_u, Ax_v, Ay_v, Ax_pc, Ay_pc;
+  std::vector<double> bx_u, by_u, bx_v, by_v, bx_pc, by_pc;
+
   // Residual for each iteration
   std::vector<double> residuals;
 };

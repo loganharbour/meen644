@@ -1,7 +1,7 @@
 #ifndef MATRIX
 #define MATRIX
 
-#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <vector>
 
@@ -11,8 +11,8 @@
 template <typename T>
 class Matrix {
 public:
-  Matrix(unsigned int N, unsigned int M, T v = 0)
-      : N(N), M(M), A(N, std::vector<T>(M, v)) {}
+  Matrix(unsigned int N, unsigned int M)
+      : N(N), M(M), A(N, std::vector<T>(M)) {}
 
   // Const operator for getting the (i, j) element
   const T &operator()(unsigned int i, unsigned int j) const {
@@ -60,13 +60,13 @@ public:
 
   // Set the j-th row to vector v
   void setRow(unsigned int j, std::vector<T> &v) {
-    assert(j < M && vs.size() == N);
+    assert(j < M && v.size() == N);
     for (unsigned int i = 0; i < N; ++i)
       A[i][j] = v[i];
   }
   // Set the i-th column to vector v
   void setColumn(unsigned int i, std::vector<T> &v) {
-    assert(i < N && vs.size() == M);
+    assert(i < N && v.size() == M);
     for (unsigned int j = 0; j < M; ++j)
       A[i][j] = v[j];
   }

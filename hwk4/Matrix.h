@@ -30,6 +30,18 @@ public:
       setRow(j, v);
   }
 
+  // Prints the matrix
+  void print(std::string prefix = "", bool newline = false, unsigned int pr = 6) {
+    if (prefix.length() != 0)
+      std::cout << prefix << std::endl;
+    for (unsigned int j = 0; j < M; ++j) {
+      for (unsigned int i = 0; i < N; ++i)
+        std::cout << std::showpos << std::scientific << std::setprecision(pr) << A[i][j] << " ";
+      std::cout << std::endl;
+    }
+    if (newline)
+      std::cout << std::endl;
+  }
   // Saves the matrix in csv format
   void save(const std::string filename, unsigned int precision = 12) const {
     std::ofstream f;

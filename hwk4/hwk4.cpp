@@ -15,6 +15,6 @@ main()
   BoundaryCondition u_BC(bc_val, 0, bc_val, 0);
   BoundaryCondition v_BC(0, 0, 0, 0);
 
-  Flow2D problem(5, 5, Lx, Ly, u_BC, v_BC, rho, mu);
+  Flow2D problem(5, 5, Lx, Ly, u_BC, v_BC, rho, mu, false);
   problem.solve();
 }

@@ -5,6 +5,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <map>
 
 #include "Matrix.h"
 #include "TriDiagonal.h"
@@ -31,7 +32,7 @@ print(const std::vector<T> & v, const unsigned int pr = 6)
 
 struct BoundaryCondition
 {
-  BoundaryCondition(double top, double right, double bottom, double left)
+  BoundaryCondition(double top = 0, double right = 0, double bottom = 0, double left = 0)
     : top(top), right(right), bottom(bottom), left(left)
   {
   }
@@ -72,6 +73,59 @@ enum Equations
   pc
 };
 
+static std::string EquationName(Equations eq) {
+  switch (eq)
+  {
+    case Equations::u:
+      return "u";
+    case Equations::v:
+      return "v";
+    case Equations::pc:
+      return "pc";
+  }
+}
+
+struct System
+{
+  System(const Equations eq,
+         const unsigned int Nx,
+         const unsigned int Ny,
+         BoundaryCondition bc = BoundaryCondition())
+    : eq(eq),
+      name(EquationName(eq)),
+      Nx(Nx),
+      Ny(Ny),
+      Mx(Nx - 1),
+      My(Ny - 1),
+      a(Nx, Ny),
+      phi(Nx, Ny),
+      Ax(Nx - 2),
+      Ay(Ny - 2),
+      bx(Nx - 2),
+      by(Ny - 2)
+  {
+    // Apply initial boundary conditions
+    phi.setColumn(0, bc.left);
+    phi.setColumn(Mx, bc.right);
+    phi.setRow(0, bc.bottom);
+    phi.setRow(My, bc.top);
+  }
+
+  const double & operator()(unsigned int i, unsigned int j) const { return phi(i, j); }
+  double & operator()(unsigned int i, unsigned int j) { return phi(i, j); }
+  void reset() { phi = 0; }
+  void print(std::string prefix, bool newline = false) { phi.print(prefix, newline); }
+
+  const Equations eq;
+  const std::string name;
+  const unsigned int Nx, Ny;
+  const unsigned int Mx, My;
+  MatrixCoefficients a;
+  Matrix<double> phi;
+  TriDiagonal<double> Ax, Ay;
+  std::vector<double> bx, by;
+};
+
 /**
  * Solves a 2D heat conduction problem with dirichlet conditions on the top,
  * left, bottom and with a zero-flux condition on the right with Nx x Ny
@@ -84,8 +138,8 @@ public:
          const unsigned int Ny,
          const double Lx,
          const double Ly,
-         const BoundaryCondition u_BC,
-         const BoundaryCondition v_BC,
+         const BoundaryCondition u_bc,
+         const BoundaryCondition v_bc,
          const double rho,
          const double mu,
          const bool loud = false,
@@ -103,16 +157,14 @@ public:
   unsigned int getNumIterations() { return residuals.size(); }
 
 private:
-  void fillInitialValues();
-
   // Flow2D_correct.cpp
   void correct();
   void pCorrect();
   void uCorrect();
   void vCorrect();
-  void pBoundaryCorrect();
 
   // Flow2D_coefficients.cpp
+  void fillCoefficients(System & sys);
   void pcCoefficients();
   void uCoefficients();
   void vCoefficients();
@@ -128,27 +180,21 @@ private:
   double vResidual();
 
   // Flow2D_solvers.cpp
-  void solve(const Equations eq);
-  void solveColumn(const unsigned int i, const Equations equation);
-  void solveRow(const unsigned int j, const Equations equation);
+  void solve(System & sys);
+  void solveColumn(const unsigned int i, System & sys);
+  void solveRow(const unsigned int j, System & sys);
   void solveVelocities();
 
 protected:
   // Number of pressure CVs
   const unsigned int Nx, Ny;
-  // Maximum nodal values
-  const unsigned int Mx_u, My_u, Mx_v, My_v, Mx_p, My_p;
 
   // Geometry [m]
   const double Lx, Ly, L_ref, dx, dy;
-  // Boundary conditions
-  const BoundaryCondition u_BC, v_BC;
   // Reference velocity
   const double u_ref;
   // Material properties
   const double rho, mu;
-  // Coefficient matrices
-  MatrixCoefficients a_u, a_v, a_pc;
 
   // Loud (debug)
   const bool loud;
@@ -160,16 +206,10 @@ protected:
   // Relaxation coefficients
   const double w_uv, alpha_p;
 
-  // Velocity solutions
-  Matrix<double> u, v;
+  // Systems
+  System u, v, pc;
   // Pressure solution
   Matrix<double> p;
-  // Pressure corrector solution
-  Matrix<double> pc;
-
-  // Matrices and vectors for sweeping
-  TriDiagonal<double> Ax_u, Ay_u, Ax_v, Ay_v, Ax_pc, Ay_pc;
-  std::vector<double> bx_u, by_u, bx_v, by_v, bx_pc, by_pc;
 
   // Whether or not we converged
   bool converged = false;

@@ -20,8 +20,8 @@ double
 Flow2D::pResidual()
 {
   double numer = 0;
-  for (unsigned int i = 1; i < Mx_p; ++i)
-    for (unsigned int j = 1; j < My_p; ++j)
+  for (unsigned int i = 1; i < pc.Mx; ++i)
+    for (unsigned int j = 1; j < pc.My; ++j)
       numer += std::abs(dy * (u(i - 1, j) - u(i, j)) + dx * (v(i, j - 1) - v(i, j)));
   return numer / (u_ref * L_ref);
 }
@@ -30,10 +30,10 @@ double
 Flow2D::uResidual()
 {
   double numer, numer_temp, denom = 0;
-  for (unsigned int i = 1; i < Mx_u; ++i)
-    for (unsigned int j = 1; j < My_u; ++j)
+  for (unsigned int i = 1; i < u.Mx; ++i)
+    for (unsigned int j = 1; j < u.My; ++j)
     {
-      Coefficients & a = a_u(i, j);
+      Coefficients & a = u.a(i, j);
       numer_temp = a.p * u(i, j);
       denom += std::abs(numer_temp);
       numer_temp -= a.n * u(i, j + 1);
@@ -50,10 +50,10 @@ double
 Flow2D::vResidual()
 {
   double numer, numer_temp, denom = 0;
-  for (unsigned int i = 1; i < Mx_v; ++i)
-    for (unsigned int j = 1; j < My_v; ++j)
+  for (unsigned int i = 1; i < v.Mx; ++i)
+    for (unsigned int j = 1; j < v.My; ++j)
     {
-      Coefficients & a = a_v(i, j);
+      Coefficients & a = v.a(i, j);
       numer_temp = a.p * v(i, j);
       denom += std::abs(numer_temp);
       numer_temp -= a.n * v(i, j + 1);

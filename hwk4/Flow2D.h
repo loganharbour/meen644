@@ -31,7 +31,7 @@ struct BoundaryCondition
 
 struct Coefficients
 {
-  double p, n, e, s, w, b;
+  double p, n, e, s, w, b = 0;
 };
 
 struct MatrixCoefficients
@@ -76,16 +76,26 @@ public:
 
 private:
   void correct();
-  void fillBCs();
-  void filluCoefficients();
-  void fillvCoefficients();
-  void fillpcCoefficients();
-  void solve(Equations eq);
+  void fillInitialValues();
+
+  void uCoefficients();
+  void vCoefficients();
+  void pcCoefficients();
+  void velocityCoefficients(Coefficients & a,
+                            const Coefficients & D,
+                            const Coefficients & F,
+                            const double b);
+
+  double uResidual();
+  double vResidual();
+  double pResidual();
+
+  void solve(const Equations eq);
 
   // Solve and sweep operations
   void solveVelocities();
-  void solveColumn(unsigned int i, Equations equation);
-  void solveRow(unsigned int j, Equations equation);
+  void solveColumn(const unsigned int i, const Equations equation);
+  void solveRow(const unsigned int j, const Equations equation);
 
 protected:
   // Number of pressure CVs

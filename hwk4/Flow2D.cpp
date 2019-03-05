@@ -46,34 +46,51 @@ Flow2D::Flow2D(unsigned int Nx,
     p(Mx_p + 1, My_p + 1),
     pc(Mx_p + 1, My_p + 1),
     // Initialize sweeping matrices and vectors
-    Ax_u(My_u - 1),
-    Ay_u(Mx_u - 1),
-    Ax_v(My_v - 1),
-    Ay_v(Mx_v - 1),
-    Ax_pc(My_p - 1),
-    Ay_pc(Mx_p - 1),
-    bx_u(My_u - 1),
-    by_u(Mx_u - 1),
-    bx_v(My_v - 1),
-    by_v(Mx_v - 1),
-    bx_pc(My_p - 1),
-    by_pc(Mx_p - 1)
+    Ax_u(Mx_u - 1),
+    Ay_u(My_u - 1),
+    Ax_v(Mx_v - 1),
+    Ay_v(My_v - 1),
+    Ax_pc(Mx_p - 1),
+    Ay_pc(My_p - 1),
+    bx_u(Mx_u - 1),
+    by_u(My_u - 1),
+    bx_v(Mx_v - 1),
+    by_v(My_v - 1),
+    bx_pc(Mx_p - 1),
+    by_pc(My_p - 1)
 {
 }
 
 void
 Flow2D::solve()
 {
-  // for (unsigned int l = 0; l < max_its; ++l)
-  // {
-  // Solve for v, u, and then p
-  solve(Equations::u);
-  solve(Equations::v);
-  solve(Equations::pc);
+  fillInitialValues();
 
-  // Apply corrections
-  // correct();
-  // }
+  for (unsigned int l = 0; l < 2; ++l)
+  {
+    // Reset pressure correction
+    pc = 0;
+
+    // Solve for v, u, and then p
+    solve(Equations::u);
+    solve(Equations::v);
+    solve(Equations::pc);
+
+    // Apply corrections
+    correct();
+    //
+    // for (unsigned int j = 0; j <= My_p; ++j)
+    // {
+    //   p(0, j) = p(1, j);
+    //   p(Mx_p, j) = p(Mx_p - 1, j);
+    // }
+    // for (unsigned int i = 0; i <= Mx_p; ++i)
+    // {
+    //   p(i, 0) = p(i, 1);
+    //   p(i, My_p) = p(i, My_p - 1);
+    // }
+    std::cout << pResidual() << std::endl;
+  }
 
   u.save("u.csv");
   v.save("v.csv");
@@ -82,7 +99,7 @@ Flow2D::solve()
 }
 
 void
-Flow2D::solve(Equations eq)
+Flow2D::solve(const Equations eq)
 {
   unsigned int Mx, My;
   // Fill coefficients for this equation and grab correct max vals
@@ -91,206 +108,195 @@ Flow2D::solve(Equations eq)
     case Equations::u:
       Mx = Mx_u;
       My = My_u;
-      filluCoefficients();
+      uCoefficients();
       break;
     case Equations::v:
       Mx = Mx_v;
       My = My_v;
-      fillvCoefficients();
+      vCoefficients();
       break;
     case Equations::pc:
       Mx = Mx_p;
       My = My_p;
-      fillpcCoefficients();
+      pcCoefficients();
       break;
   }
 
-  // Solve from bottom to top
-  for (int j = 1; j < My; ++j)
-    solveRow(j, eq);
-  // Solve from left to right
   for (int i = 1; i < Mx; ++i)
     solveColumn(i, eq);
-  // Solve from top to bottom
-  for (int j = My - 1; j >= 1; --j)
+  for (int j = 1; j < My; ++j)
     solveRow(j, eq);
-  // Solve from right to left
-  for (int i = Mx - 1; i >= 1; --i)
-    solveColumn(i, eq);
+  // // Solve from bottom to top
+  // for (int j = 1; j < My; ++j)
+  //   solveRow(j, eq);
+  // // // Solve from left to right
+  // for (int i = 1; i < Mx; ++i)
+  //   solveColumn(i, eq);
+  // // Solve from top to bottom
+  // for (int j = My - 1; j >= 1; --j)
+  //   solveRow(j, eq);
+  // // Solve from right to left
+  // for (int i = Mx - 1; i >= 1; --i)
+  //   solveColumn(i, eq);
 }
 
 void
-Flow2D::fillBCs()
+Flow2D::fillInitialValues()
 {
-  u.setRow(0, u_BC.bottom);
-  u.setRow(My_u, u_BC.top);
+  // Set solution values to zero
+  u = 0;
+  v = 0;
+  p = 0;
+
+  // Apply u boundary conditions
   u.setColumn(0, u_BC.left);
   u.setColumn(Mx_u, u_BC.right);
-  v.setRow(0, v_BC.bottom);
-  v.setRow(My_v, v_BC.top);
+  u.setRow(0, u_BC.bottom);
+  u.setRow(My_u, u_BC.top);
+
+  // Apply v boundary conditions
   v.setColumn(0, v_BC.left);
   v.setColumn(Mx_v, v_BC.right);
+  v.setRow(0, v_BC.bottom);
+  v.setRow(My_v, v_BC.top);
 }
 
 void
-Flow2D::filluCoefficients()
+Flow2D::uCoefficients()
 {
-  Coefficients D, F, P;
+  Coefficients D, F;
+  double W, dy_pn, dy_ps, b;
 
   for (unsigned int i = 1; i < Mx_u; ++i)
     for (unsigned int j = 1; j < My_u; ++j)
     {
-      // Diffusion coefficient for left and right
-      D.e = dy * mu / dx;
-      D.w = dy * mu / dx;
-      // Diffusion coefficient for top and bottom for internal cells
-      if (i > 1 && i < Mx_u - 1)
-      {
-        D.n = 3 * dx * mu / (2 * dy);
-        D.s = 3 * dx * mu / (2 * dy);
-      }
-      // Diffusion coefficient for top and bottom for left and right cells
-      else
-      {
-        D.n = dx * mu / dy;
-        D.s = dx * mu / dy;
-      }
-      if (j == 1)
-        D.s *= 2;
-      if (j == My_u - 1)
-        D.n *= 2;
+      std::cout << "u coefficients " << i << ", " << j;
+      // Width of the cell
+      W = (i == 1 || i == Mx_u - 1 ? 3 * dx / 2 : dx);
+      // North/south distances to pressure nodes
+      dy_pn = (j == My_u - 1 ? dy / 2 : dy);
+      dy_ps = (j == 1 ? dy / 2 : dy);
 
-      // West flow rates
-      if (i == 1)
-        F.w = rho * dy * u(0, j);
-      else
-        F.w = rho * dy * (u(i - 1, j) + u(i, j)) / 2;
-      // East flow rates
-      if (i == Mx_u - 1)
-        F.w = rho * dy * u(Mx_u, j);
-      else
-        F.w = rho * dy * (u(i - 1, j) + u(i, j)) / 2;
-      // North and south flow rates on left boundary
-      if (i == 1)
+      // Diffusion coefficients
+      D.n = mu * W / dy_pn;
+      D.e = mu * dy / dx;
+      D.s = mu * W / dy_ps;
+      D.w = mu * dy / dx;
+
+      // East and west flows
+      F.e = (i == Mx_u - 1 ? rho * dy * u(Mx_u, j) : rho * dy * (u(i - 1, j) + u(i, j)) / 2);
+      F.w = (i == 1 ? rho * dy * u(0, j) : rho * dy * (u(i - 1, j) + u(i, j)) / 2);
+      // North and south flows
+      if (i == 1) // Left boundary
       {
-        F.n = rho * dx * (v(0, j) + 3 * v(1, j) + 2 * v(2, j)) / 4;
-        F.s = rho * dx * (v(0, j - 1) + 3 * v(1, j - 1) + 2 * v(2, j - 1)) / 4;
+        F.n = rho * W * (v(0, j) + 3 * v(1, j) + 2 * v(2, j)) / 6;
+        F.s = rho * W * (v(0, j - 1) + 3 * v(1, j - 1) + 2 * v(2, j - 1)) / 6;
       }
-      // North and south flow rates on right boundary
-      else if (i == Mx_u - 1)
+      else if (i == Mx_u - 1) // Right boundary
       {
-        F.n = rho * dx * (2 * v(i, j) + 3 * v(i + 1, j) + v(i + 2, j)) / 4;
-        F.s = rho * dx * (2 * v(i, j - 1) + 3 * v(i + 1, j - 1) + v(i + 2, j - 1)) / 4;
+        F.n = rho * W * (2 * v(i, j) + 3 * v(i + 1, j) + v(i + 2, j)) / 6;
+        F.s = rho * W * (2 * v(i, j - 1) + 3 * v(i + 1, j - 1) + v(i + 2, j - 1)) / 6;
       }
-      // North and south flow rates on the remainder
-      else
+      else // Interior (not left or right boundary)
       {
-        F.n = rho * dx * (v(i, j) + v(i + 1, j)) / 2;
-        F.s = rho * dx * (v(i, j - 1) + v(i + 1, j - 1)) / 2;
+        F.n = rho * W * (v(i, j) + v(i + 1, j)) / 2;
+        F.s = rho * W * (v(i, j - 1) + v(i + 1, j - 1)) / 2;
       }
 
-      // Perchlet number
-      P.n = F.n / D.n;
-      P.e = F.e / D.e;
-      P.s = F.s / D.s;
-      P.w = F.w / D.w;
-      std::cout << "(" << i << "," << j << "): n = " << D.n << ", e " << D.e << ", s " << D.s << ", w " << D.w << std::endl;
+      // Pressure RHS
+      b = dy * (p(i, j) - p(i + 1, j));
 
-      // Fill coefficients
-      Coefficients & a = a_u(i, j);
-      a.n = D.n * std::fmax(0, std::pow(1 - 0.1 * std::fabs(P.n), 5)) + std::fmax(-F.n, 0);
-      a.e = D.e * std::fmax(0, std::pow(1 - 0.1 * std::fabs(P.e), 5)) + std::fmax(-F.e, 0);
-      a.s = D.s * std::fmax(0, std::pow(1 - 0.1 * std::fabs(P.s), 5)) + std::fmax(F.s, 0);
-      a.w = D.w * std::fmax(0, std::pow(1 - 0.1 * std::fabs(P.w), 5)) + std::fmax(F.w, 0);
-      a.p = a.n + a.e + a.s + a.w;
-      // std::cout << "(" << i << "," << j << "): n = " << a.n << ", e " << a.e << ", s " << a.s << ", w " << a.w << ", p " << a.p << std::endl;
-      a.b = dy * (p(i, j) - p(i + 1, j));
+      // Compute Perchlet number and store into a_u(i, j)
+      velocityCoefficients(a_u(i, j), D, F, b);
     }
 }
 
 void
-Flow2D::fillvCoefficients()
+Flow2D::velocityCoefficients(Coefficients & a,
+                                 const Coefficients & D,
+                                 const Coefficients & F,
+                                 const double b)
 {
-  Coefficients D, F, P;
+  // Perchlet number
+  Coefficients P;
+  P.n = F.n / D.n;
+  P.e = F.e / D.e;
+  P.s = F.s / D.s;
+  P.w = F.w / D.w;
+
+  // Fill coefficients
+  a.n = D.n * std::fmax(0, std::pow(1 - 0.1 * std::fabs(P.n), 5)) + std::fmax(-F.n, 0);
+  a.e = D.e * std::fmax(0, std::pow(1 - 0.1 * std::fabs(P.e), 5)) + std::fmax(-F.e, 0);
+  a.s = D.s * std::fmax(0, std::pow(1 - 0.1 * std::fabs(P.s), 5)) + std::fmax(F.s, 0);
+  a.w = D.w * std::fmax(0, std::pow(1 - 0.1 * std::fabs(P.w), 5)) + std::fmax(F.w, 0);
+  a.p = a.n + a.e + a.s + a.w;
+  a.b = b;
+
+  std::cout << ":  n = " << a.n;
+  std::cout << ", e = " << a.e;
+  std::cout << ", s = " << a.s;
+  std::cout << ", w = " << a.w;
+  std::cout << ", b = " << a.b << std::endl;
+}
+
+void
+Flow2D::vCoefficients()
+{
+  Coefficients D, F;
+  double H, dx_pe, dx_pw, b;
 
   for (unsigned int i = 1; i < Mx_v; ++i)
     for (unsigned int j = 1; j < My_v; ++j)
     {
-      // Diffusion coefficient for top and bottom
-      D.n = dx * mu / dy;
-      D.s = dx * mu / dy;
-      // Diffusion coefficient for left and right for internal cells
-      if (j > 1 && j < Mx_v - 1)
-      {
-        D.e = 3 * dy * mu / (2 * dx);
-        D.w = 3 * dy * mu / (2 * dx);
-      }
-      // Diffusion coefficient for left and right for bottom and top cells
-      else
-      {
-        D.e = dy * mu / dx;
-        D.w = dy * mu / dx;
-      }
-      // Why
-      if (i == 1)
-        D.w *= 2;
-      if (i == Mx_v - 1)
-        D.e *= 2;
+      std::cout << "v coefficients " << i << ", " << j;
+      // Height of the cell
+      H = (j == 1 || j == My_v - 1 ? 3 * dy / 2 : dy);
+      // East/west distances to pressure nodes
+      dx_pe = (i == Mx_v - 1 ? dx / 2 : dx);
+      dx_pw = (i == 1 ? dx / 2 : dx);
 
-      // North flow rates
-      if (j == My_v - 1)
-        F.n = rho * dx * v(i, My_v);
-      else
-        F.n = rho * dx * (v(i, j + 1) + v(i, j)) / 2;
-      // South flow rates
-      if (j == 1)
-        F.s = rho * dx * v(i, 0);
-      else
-        F.s = rho * dx * (v(i, j - 1) + v(i, j)) / 2;
-      // East and west flow rates on bottom boundary
-      if (j == 1)
+      // Diffusion coefficient
+      D.n = mu * dx / dy;
+      D.e = mu * H / dx_pe;
+      D.s = mu * dx / dy;
+      D.w = mu * H / dx_pw;
+
+      // North and east flows
+      F.n = (j == My_v - 1 ? rho * dx * v(i, My_v) : rho * dx * (v(i, j + 1) + v(i, j)) / 2);
+      F.s = (j == 1 ? rho * dx * v(i, 0) : rho * dx * (v(i, j - 1) + v(i, j)) / 2);
+      // East and west flows
+      if (j == 1) // Bottom boundary
       {
-        F.e = rho * dy * (u(i, 0) + 2 * u(i, 1) + 3 * u(i, 2)) / 4;
-        F.w = rho * dy * (u(i - 1, 0) + 2 * u(i - 1, 1) + 3 * u(i - 1, 2)) / 4;
+        F.e = rho * H * (u(i, 0) + 3 * u(i, 1) + 2 * u(i, 2)) / 6;
+        F.w = rho * H * (u(i - 1, 0) + 3 * u(i - 1, 1) + 2 * u(i - 1, 2)) / 6;
       }
-      // East and west flow rates on top boundary
-      else if (j == My_v - 1)
+      else if (j == My_v - 1) // Top boundary
       {
-        F.e = rho * dy * (u(i, My_u) + 2 * u(i, My_u - 1) + 3 * u(i, My_u - 2)) / 4;
-        F.w = rho * dy * (u(i - 1, My_u) + 2 * u(i - 1, My_u - 1) + 3 * u(i - 1, My_u - 2)) / 4;
+        F.e = rho * H * (u(i, My_u) + 3 * u(i, My_u - 1) + 2 * u(i, My_u - 2)) / 6;
+        F.w = rho * H * (u(i - 1, My_u) + 3 * u(i - 1, My_u - 1) + 2 * u(i - 1, My_u - 2)) / 6;
       }
-      // East and west flow rates on the remainder
-      else
+      else // Interior (not top or bottom boundary)
       {
-        F.e = rho * dy * (u(i, j) + u(i, j + 1)) / 2;
-        F.w = rho * dy * (u(i - 1, j) + u(i - 1, j + 1)) / 2;
+        F.e = rho * H * (u(i, j) + u(i, j + 1)) / 2;
+        F.w = rho * H * (u(i - 1, j) + u(i - 1, j + 1)) / 2;
       }
 
-      // Perchlet number
-      P.n = F.n / D.n;
-      P.e = F.e / D.e;
-      P.s = F.s / D.s;
-      P.w = F.w / D.w;
+      // Pressure RHS
+      b = dx * (p(i, j) - p(i, j + 1));
 
-      // Fill coefficients
-      Coefficients & a = a_v(i, j);
-      a.n = D.n * std::fmax(0, std::pow(1 - 0.1 * std::fabs(P.n), 5)) + std::fmax(-F.n, 0);
-      a.e = D.e * std::fmax(0, std::pow(1 - 0.1 * std::fabs(P.e), 5)) + std::fmax(-F.e, 0);
-      a.s = D.s * std::fmax(0, std::pow(1 - 0.1 * std::fabs(P.s), 5)) + std::fmax(F.s, 0);
-      a.w = D.w * std::fmax(0, std::pow(1 - 0.1 * std::fabs(P.w), 5)) + std::fmax(F.w, 0);
-      a.p = a.n + a.e + a.s + a.w;
-      a.b = dx * (p(i, j) - p(i + 1, j));
+      // Compute Perchlet number and store into a_v(i, j)
+      velocityCoefficients(a_v(i, j), D, F, b);
     }
 }
 
 void
-Flow2D::solveRow(unsigned int j, Equations eq)
+Flow2D::solveRow(const unsigned int j, const Equations eq)
 {
   // Grab the appropriate matrix/vector/coefficients/previous solution
-  auto & A = (eq == Equations::u ? Ax_u : (eq == Equations::v ? Ax_u : Ax_pc));
-  auto & b = (eq == Equations::u ? bx_u : (eq == Equations::v ? bx_u : bx_pc));
-  auto M = (eq == Equations::u ? Mx_u : (eq == Equations::v ? Mx_u : Mx_p));
-  auto & phi = (eq == Equations::u ? u : (eq == Equations::v ? v : pc));
+  auto & A = (eq == Equations::u ? Ax_u : (eq == Equations::v ? Ax_v : Ax_pc));
+  auto & b = (eq == Equations::u ? bx_u : (eq == Equations::v ? bx_v : bx_pc));
+  auto M = (eq == Equations::u ? Mx_u : (eq == Equations::v ? Mx_v : Mx_p));
+  Matrix<double> & phi = (eq == Equations::u ? u : (eq == Equations::v ? v : pc));
   auto & as = (eq == Equations::u ? a_u : (eq == Equations::v ? a_v : a_pc));
   double w = (eq == Equations::pc ? 1 : w_uv);
 
@@ -298,9 +304,7 @@ Flow2D::solveRow(unsigned int j, Equations eq)
   for (unsigned int i = 1; i < M; ++i)
   {
     Coefficients & a = as(i, j);
-    b[i - 1] = a.b + a.s * phi(i, j - 1) + a.n * phi(i, j + 1);
-    if (w != 1)
-      b[i - 1] += a.p * phi(i, j) * (w - 1);
+    b[i - 1] = a.b + a.s * phi(i, j - 1) + a.n * phi(i, j + 1) + a.p * phi(i, j) * (w - 1);
     if (i == 1)
     {
       A.setTopRow(a.p * w, -a.e);
@@ -318,18 +322,21 @@ Flow2D::solveRow(unsigned int j, Equations eq)
   }
 
   // And solve
+  A.save("row_" + std::to_string(j) + "_A.csv");
+  saveCSV(b, "row_" + std::to_string(j) + "_b.csv");
   A.solveTDMA(b);
+  saveCSV(b, "row_" + std::to_string(j) + "_sol.csv");
   for (unsigned int i = 1; i < M; ++i)
     phi(i, j) = b[i - 1];
 }
 
 void
-Flow2D::solveColumn(unsigned int i, Equations eq)
+Flow2D::solveColumn(const unsigned int i, const Equations eq)
 {
   // Grab the appropriate matrix/vector/coefficients/previous solution
-  auto & A = (eq == Equations::u ? Ay_u : (eq == Equations::v ? Ay_u : Ay_pc));
-  auto & b = (eq == Equations::u ? by_u : (eq == Equations::v ? by_u : by_pc));
-  auto M = (eq == Equations::u ? My_u : (eq == Equations::v ? My_u : My_p));
+  auto & A = (eq == Equations::u ? Ay_u : (eq == Equations::v ? Ay_v : Ay_pc));
+  auto & b = (eq == Equations::u ? by_u : (eq == Equations::v ? by_v : by_pc));
+  auto M = (eq == Equations::u ? My_u : (eq == Equations::v ? My_v : My_p));
   auto & phi = (eq == Equations::u ? u : (eq == Equations::v ? v : pc));
   auto & as = (eq == Equations::u ? a_u : (eq == Equations::v ? a_v : a_pc));
   double w = (eq == Equations::pc ? 1 : w_uv);
@@ -338,33 +345,34 @@ Flow2D::solveColumn(unsigned int i, Equations eq)
   for (unsigned int j = 1; j < M; ++j)
   {
     Coefficients & a = as(i, j);
-    b[i - 1] = a.b + a.w * phi(i - 1, j) + a.e * phi(i + 1, j);
-    if (w != 1)
-      b[i - 1] += a.p * phi(i, j) * (w - 1);
+    b[j - 1] = a.b + a.w * phi(i - 1, j) + a.e * phi(i + 1, j) + a.p * phi(i, j) * (w - 1);
     if (j == 1)
     {
       A.setTopRow(a.p * w, -a.n);
       if (eq != Equations::pc)
-        b[i - 1] += a.s * phi(i, j - 1);
+        b[j - 1] += a.s * phi(i, j - 1);
     }
-    else if (j == M)
+    else if (j == M - 1)
     {
       A.setBottomRow(-a.s, a.p * w);
       if (eq != Equations::pc)
-        b[i - 1] += a.n * phi(i, j + 1);
+        b[j - 1] += a.n * phi(i, j + 1);
     }
     else
-      A.setMiddleRow(i - 1, -a.s * w, a.p, -a.n);
+      A.setMiddleRow(j - 1, -a.s, a.p * w, -a.n);
   }
 
   // And solve
+  A.save("col_" + std::to_string(i) + "_A.csv");
+  saveCSV(b, "col_" + std::to_string(i) + "_b.csv");
   A.solveTDMA(b);
+  saveCSV(b, "col_" + std::to_string(i) + "_sol.csv");
   for (unsigned int j = 1; j < M; ++j)
-    u(i, j) = b[i - 1];
+    phi(i, j) = b[j - 1];
 }
 
 void
-Flow2D::fillpcCoefficients()
+Flow2D::pcCoefficients()
 {
   for (unsigned int i = 1; i < Mx_p; ++i)
     for (unsigned int j = 1; j < My_p; ++j)
@@ -373,15 +381,22 @@ Flow2D::fillpcCoefficients()
 
       // Each of the above is only valid off boundary
       if (i != 1)
-        a.w = rho * dy * dy / a_v(i - 1, j).p;
+        a.w = rho * dy * dy / a_u(i - 1, j).p;
       if (i != Mx_p - 1)
-        a.e = rho * dy * dy / a_v(i, i).p;
+        a.e = rho * dy * dy / a_u(i, j).p;
       if (j != 1)
         a.s = rho * dx * dx / a_v(i, j - 1).p;
       if (j != My_p - 1)
         a.n = rho * dx * dx / a_v(i, j).p;
       a.p = a.n + a.e + a.s + a.w;
       a.b = rho * (dy * (u(i - 1, j) - u(i, j)) + dx * (v(i, j - 1) + v(i, j)));
+      std::cout << "(" << i << ", " << j << ")";
+      std::cout << " an = " << a.n;
+      std::cout << ", ae = " << a.e;
+      std::cout << ", as = " << a.s;
+      std::cout << ", aw = " << a.w;
+      std::cout << ", ab = " << a.b;
+      std::cout << ", avp = " << a_v(i, j).p << std::endl;
     }
 }
 
@@ -391,15 +406,23 @@ Flow2D::correct()
   // Correct u-velocities
   for (unsigned int i = 1; i < Mx_u; ++i)
     for (unsigned int j = 1; j < My_u; ++j)
-      u(i, j) += dy * (pc(i, j) - pc(i + 1, j)) * dy / a_u(i, j).p;
+      u(i, j) += dy * (pc(i, j) - pc(i + 1, j)) / a_u(i, j).p;
 
   // Correct v-velocities
   for (unsigned int i = 1; i < Mx_v; ++i)
     for (unsigned int j = 1; j < My_v; ++j)
-      v(i, j) += dx * (pc(i, j) - pc(i, j + 1)) * dy / a_v(i, j).p;
+      v(i, j) += dx * (pc(i, j) - pc(i, j + 1)) / a_v(i, j).p;
 
   // Correct pressures
   for (unsigned int i = 1; i < Mx_p; ++i)
     for (unsigned int j = 1; j < My_p; ++j)
       p(i, j) += alpha_p * pc(i, j);
+}
+
+double Flow2D::pResidual() {
+  double R = 0;
+  for (unsigned int i = 1; i < Mx_p; ++i)
+    for (unsigned int j = 1; i < My_p; ++j)
+      P += std::fabs(rho * (dy * (u(i - 1, j) - u(i, j)) + dx * (v(i, j - 1) - v(i, j))) / (Re * mu);
+  return P;
 }

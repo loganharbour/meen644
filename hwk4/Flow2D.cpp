@@ -97,9 +97,8 @@ Flow2D::run()
   if (!converged)
     std::cout << "Did not converge!" << std::endl;
 
-  u.save("u.csv");
-  v.save("v.csv");
-  p.save("p.csv");
+  // Correct pressure values on boundary
+  pBoundaryCorrect();
 }
 
 void

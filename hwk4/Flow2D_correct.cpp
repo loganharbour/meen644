@@ -40,3 +40,18 @@ Flow2D::vCorrect()
   if (loud)
     v.print("v corrected = ", true);
 }
+
+void
+Flow2D::pBoundaryCorrect()
+{
+  for (unsigned int i = 0; i <= Mx_p; ++i)
+  {
+    p(i, 0) = p(i, 1);
+    p(i, My_p) = p(i, My_p - 1);
+  }
+  for (unsigned int j = 0; j <= My_p; ++j)
+  {
+    p(0, j) = p(1, j);
+    p(Mx_p, j) = p(Mx_p - 1, j);
+  }
+}

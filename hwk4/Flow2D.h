@@ -110,6 +110,7 @@ private:
   void pCorrect();
   void uCorrect();
   void vCorrect();
+  void pBoundaryCorrect();
 
   // Flow2D_coefficients.cpp
   void pcCoefficients();

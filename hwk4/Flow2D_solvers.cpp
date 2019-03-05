@@ -1,3 +1,5 @@
+#include "Flow2D.h"
+
 void
 Flow2D::solve(const Equations eq)
 {
@@ -22,22 +24,12 @@ Flow2D::solve(const Equations eq)
       break;
   }
 
+  // Solve from left to right
   for (int i = 1; i < Mx; ++i)
     solveColumn(i, eq);
+  // Solve from bottom to top
   for (int j = 1; j < My; ++j)
     solveRow(j, eq);
-  // // Solve from bottom to top
-  // for (int j = 1; j < My; ++j)
-  //   solveRow(j, eq);
-  // // // Solve from left to right
-  // for (int i = 1; i < Mx; ++i)
-  //   solveColumn(i, eq);
-  // // Solve from top to bottom
-  // for (int j = My - 1; j >= 1; --j)
-  //   solveRow(j, eq);
-  // // Solve from right to left
-  // for (int i = Mx - 1; i >= 1; --i)
-  //   solveColumn(i, eq);
 
   if (loud)
     switch (eq)

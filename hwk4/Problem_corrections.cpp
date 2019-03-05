@@ -1,7 +1,10 @@
-#include "Flow2D.h"
+#include "Problem.h"
+
+namespace Flow2D
+{
 
 void
-Flow2D::correct()
+Problem::correct()
 {
   uCorrect();
   vCorrect();
@@ -9,7 +12,7 @@ Flow2D::correct()
 }
 
 void
-Flow2D::pCorrect()
+Problem::pCorrect()
 {
   for (unsigned int i = 1; i < pc.Mx; ++i)
     for (unsigned int j = 1; j < pc.My; ++j)
@@ -35,7 +38,7 @@ Flow2D::pCorrect()
 }
 
 void
-Flow2D::uCorrect()
+Problem::uCorrect()
 {
   for (unsigned int i = 1; i < u.Mx; ++i)
     for (unsigned int j = 1; j < u.My; ++j)
@@ -45,7 +48,7 @@ Flow2D::uCorrect()
 }
 
 void
-Flow2D::vCorrect()
+Problem::vCorrect()
 {
   for (unsigned int i = 1; i < v.Mx; ++i)
     for (unsigned int j = 1; j < v.My; ++j)
@@ -53,4 +56,6 @@ Flow2D::vCorrect()
 
   if (loud)
     v.print("v corrected = ", true);
+}
+
 }

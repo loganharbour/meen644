@@ -1,24 +1,29 @@
-#include "Flow2D.h"
+#include "Problem.h"
+
+namespace Flow2D
+{
 
 void
-Flow2D::fillCoefficients(System & sys)
+Problem::fillCoefficients(Variable & var)
 {
-  switch (sys.eq)
+  switch (var.name)
   {
-    case Equations::u:
+    case Variables::u:
       uCoefficients();
       break;
-    case Equations::v:
+    case Variables::v:
       vCoefficients();
       break;
-    case Equations::pc:
+    case Variables::pc:
       pcCoefficients();
+      break;
+    case Variables::p:
       break;
   }
 }
 
 void
-Flow2D::pcCoefficients()
+Problem::pcCoefficients()
 {
   for (unsigned int i = 1; i < pc.Mx; ++i)
     for (unsigned int j = 1; j < pc.My; ++j)
@@ -40,14 +45,14 @@ Flow2D::pcCoefficients()
 
   if (loud)
   {
-    std::cout << "pc coefficients: " << std::endl;
+    cout << "pc coefficients: " << endl;
     pc.a.print();
-    std::cout << std::endl;
+    cout << endl;
   }
 }
 
 void
-Flow2D::uCoefficients()
+Problem::uCoefficients()
 {
   Coefficients D, F;
   double W, dy_pn, dy_ps, b;
@@ -96,14 +101,14 @@ Flow2D::uCoefficients()
 
   if (loud)
   {
-    std::cout << "u coefficients: " << std::endl;
+    cout << "u coefficients: " << endl;
     u.a.print();
-    std::cout << std::endl;
+    cout << endl;
   }
 }
 
 void
-Flow2D::vCoefficients()
+Problem::vCoefficients()
 {
   Coefficients D, F;
   double H, dx_pe, dx_pw, b;
@@ -134,8 +139,8 @@ Flow2D::vCoefficients()
       }
       else if (j == v.My - 1) // Top boundary
       {
-        F.e = rho * H * (u(i, u.My) + 3 * u(i, u.My - 1) + 2 * u(i, u.My - 2)) / 6;
-        F.w = rho * H * (u(i - 1, u.My) + 3 * u(i - 1, u.My - 1) + 2 * u(i - 1, u.My - 2)) / 6;
+        F.e = rho * H * (2 * u(i, j) + 3 * u(i, j + 1) + u(i, j + 2)) / 6;
+        F.w = rho * H * (2 * u(i - 1, j) + 3 * u(i - 1, j + 1) + u(i - 1, j + 2)) / 6;
       }
       else // Interior (not top or bottom boundary)
       {
@@ -152,17 +157,17 @@ Flow2D::vCoefficients()
 
   if (loud)
   {
-    std::cout << "v coefficients: " << std::endl;
+    cout << "v coefficients: " << endl;
     v.a.print();
-    std::cout << std::endl;
+    cout << endl;
   }
 }
 
 void
-Flow2D::velocityCoefficients(Coefficients & a,
-                             const Coefficients & D,
-                             const Coefficients & F,
-                             const double b)
+Problem::velocityCoefficients(Coefficients & a,
+                              const Coefficients & D,
+                              const Coefficients & F,
+                              const double b)
 {
   // Perchlet number
   Coefficients P;
@@ -172,10 +177,12 @@ Flow2D::velocityCoefficients(Coefficients & a,
   P.w = F.w / D.w;
 
   // Fill coefficients
-  a.n = D.n * std::fmax(0, std::pow(1 - 0.1 * std::fabs(P.n), 5)) + std::fmax(-F.n, 0);
-  a.e = D.e * std::fmax(0, std::pow(1 - 0.1 * std::fabs(P.e), 5)) + std::fmax(-F.e, 0);
-  a.s = D.s * std::fmax(0, std::pow(1 - 0.1 * std::fabs(P.s), 5)) + std::fmax(F.s, 0);
-  a.w = D.w * std::fmax(0, std::pow(1 - 0.1 * std::fabs(P.w), 5)) + std::fmax(F.w, 0);
+  a.n = D.n * fmax(0, pow(1 - 0.1 * fabs(P.n), 5)) + fmax(-F.n, 0);
+  a.e = D.e * fmax(0, pow(1 - 0.1 * fabs(P.e), 5)) + fmax(-F.e, 0);
+  a.s = D.s * fmax(0, pow(1 - 0.1 * fabs(P.s), 5)) + fmax(F.s, 0);
+  a.w = D.w * fmax(0, pow(1 - 0.1 * fabs(P.w), 5)) + fmax(F.w, 0);
   a.p = a.n + a.e + a.s + a.w;
   a.b = b;
 }
+
+} // namespace Flow2D

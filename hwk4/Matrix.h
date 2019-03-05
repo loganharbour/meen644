@@ -1,94 +1,95 @@
-#ifndef MATRIX
-#define MATRIX
+#ifndef MATRIX_H
+#define MATRIX_H
 
 // #define NDEBUG
 #include <cassert>
+#include <fstream>
 #include <vector>
+
+using namespace std;
 
 /**
  * Class that holds a N x M matrix with common matrix operations.
  */
 template <typename T>
-class Matrix {
+class Matrix
+{
 public:
-  Matrix(unsigned int N, unsigned int M)
-      : N(N), M(M), A(N, std::vector<T>(M)) {}
+  Matrix() {}
+  Matrix(const unsigned int N, const unsigned int M) : N(N), M(M), A(N, vector<T>(M)) {}
 
   // Const operator for getting the (i, j) element
-  const T &operator()(unsigned int i, unsigned int j) const {
+  const T & operator()(const unsigned int i, const unsigned int j) const
+  {
     assert(i < N && j < M);
     return A[i][j];
   }
   // Operator for getting the (i, j) element
-  T &operator()(unsigned int i, unsigned int j) {
+  T & operator()(const unsigned int i, const unsigned int j)
+  {
     assert(i < N && j < M);
     return A[i][j];
   }
   // Operator for setting the entire matrix to a value
-  void operator=(T v) {
+  void operator=(const T v)
+  {
     for (unsigned int j = 0; j < M; ++j)
       setRow(j, v);
   }
 
   // Prints the matrix
-  void print(std::string prefix = "", bool newline = false, unsigned int pr = 6) {
+  void print(const string prefix = "", const bool newline = false, const unsigned int pr = 6) const
+  {
     if (prefix.length() != 0)
-      std::cout << prefix << std::endl;
-    for (unsigned int j = 0; j < M; ++j) {
+      cout << prefix << endl;
+    for (unsigned int j = 0; j < M; ++j)
+    {
       for (unsigned int i = 0; i < N; ++i)
-        std::cout << std::showpos << std::scientific << std::setprecision(pr) << A[i][j] << " ";
-      std::cout << std::endl;
+        cout << showpos << scientific << setprecision(pr) << A[i][j] << " ";
+      cout << endl;
     }
     if (newline)
-      std::cout << std::endl;
+      cout << endl;
   }
   // Saves the matrix in csv format
-  void save(const std::string filename, unsigned int precision = 12) const {
-    std::ofstream f;
+  void save(const string filename, const unsigned int pr = 12) const
+  {
+    ofstream f;
     f.open(filename);
-    for (unsigned int j = 0; j < M; ++j) {
-      for (unsigned int i = 0; i < N; ++i) {
+    for (unsigned int j = 0; j < M; ++j)
+    {
+      for (unsigned int i = 0; i < N; ++i)
+      {
         if (i > 0)
           f << ",";
-        f << std::setprecision(precision) << A[i][j];
+        f << setprecision(pr) << A[i][j];
       }
-      f << std::endl;
+      f << endl;
     }
     f.close();
   }
 
   // Set the j-th row to v
-  void setRow(unsigned int j, T v) {
+  void setRow(unsigned int j, T v)
+  {
     assert(j < M);
     for (unsigned int i = 0; i < N; ++i)
       A[i][j] = v;
   }
   // Set the i-th column to v
-  void setColumn(unsigned int i, T v) {
+  void setColumn(unsigned int i, T v)
+  {
     assert(i < N);
     for (unsigned int j = 0; j < M; ++j)
       A[i][j] = v;
   }
 
-  // Set the j-th row to vector v
-  void setRow(unsigned int j, std::vector<T> &v) {
-    assert(j < M && v.size() == N);
-    for (unsigned int i = 0; i < N; ++i)
-      A[i][j] = v[i];
-  }
-  // Set the i-th column to vector v
-  void setColumn(unsigned int i, std::vector<T> &v) {
-    assert(i < N && v.size() == M);
-    for (unsigned int j = 0; j < M; ++j)
-      A[i][j] = v[j];
-  }
-
 private:
   // The size of this matrix
-  const unsigned int N, M;
+  const unsigned int N = 0, M = 0;
 
   // Matrix storage
-  std::vector<std::vector<T> > A;
+  vector<vector<T>> A;
 };
 
 #endif /* MATRIX_H */

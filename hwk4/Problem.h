@@ -91,7 +91,7 @@ protected:
   // Variables
   Variable u, v, pc, p;
   // Variable map
-  map<Variables, Variable &> variables;
+  map<Variables, const Variable &> variables;
 
   // Whether or not we converged
   bool converged = false;

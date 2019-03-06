@@ -5,18 +5,18 @@ plt.rc('text', usetex=True)
 plt.rc('font', family='serif')
 
 # Load problem 2 results
-u_ref = 400 * 1.002e-3 / (998.3 * 0.1)
-Ns = [8, 16, 32, 64, 128]
-x = {}
-y = {}
-u = {}
-v = {}
+L = 0.2
+Re = 400
+rho = 998.3
+mu = 1.002e-3
+u_ref = Re * mu / (rho * L)
+Ns = [8, 16, 32, 64, 128, 256]
+x, y, u, v = {}, {}, {}, {}
 for N in Ns:
-    valu = np.loadtxt('results/p2/{}_u.csv'.format(N), delimiter=',')
+    valu = np.loadtxt('results/{}_u.csv'.format(N), delimiter=',')
     u[N] = valu[:, int(N / 2)] / u_ref
     y[N] = np.linspace(0, 1, num=len(u[N]))
-
-    valv = np.loadtxt('results/p2/{}_v.csv'.format(N), delimiter=',')
+    valv = np.loadtxt('results/{}_v.csv'.format(N), delimiter=',')
     v[N] = valv[int(N / 2), :] / u_ref
     x[N] = np.linspace(0, 1, num=len(v[N]))
 
@@ -52,6 +52,6 @@ ax[0].grid()
 ax[1].grid()
 handles, labels = ax[0].get_legend_handles_labels()
 lgd = ax[0].legend(handles, labels, loc='lower center', bbox_to_anchor=(1.0, -0.29),
-                      ncol=6, fontsize=9)
+                      ncol=7, fontsize=9)
 fig.tight_layout()
 fig.savefig('results/p2.pdf', bbox_inches='tight', bbox_extra_artists=(lgd,))

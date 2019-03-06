@@ -18,7 +18,7 @@ Problem::computeResiduals()
   if (converged)
     cout << "Converged in " << iterations << " iterations: ";
   if (converged || loud) {
-    cout << setprecision(2) << scientific;
+    cout << noshowpos << setprecision(2) << scientific;
     cout << "u = " << Ru;
     cout << ", v = " << Rv;
     cout << ", p = " << Rp << endl;

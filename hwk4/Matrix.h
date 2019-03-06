@@ -38,7 +38,7 @@ public:
   }
 
   // Prints the matrix
-  void print(const string prefix = "", const bool newline = false, const unsigned int pr = 6) const
+  void print(const string prefix = "", const bool newline = false, const unsigned int pr = 5) const
   {
     if (prefix.length() != 0)
       cout << prefix << endl;

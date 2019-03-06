@@ -20,8 +20,19 @@ main()
   input.rho = rho;
   input.u_ref = bc_val;
   input.L_ref = L;
-  input.u_bc = BoundaryCondition(0, bc_val, 0, bc_val);
-  input.v_bc = BoundaryCondition(0, 0, 0, 0);
+
+  // Problem 1: check symmetry
+  input.u_bc = BoundaryCondition(0, 0, 0, 0);
+  input.v_bc = BoundaryCondition(0, bc_val, 0, bc_val);
+  std::cout << "Problem 1, check symmetry" << std::endl;
+  {
+    Problem problem(5, 5, input);
+    problem.run();
+    problem.print(Variables::u, "u =");
+    problem.print(Variables::v, "v =");
+    problem.print(Variables::p, "p =");
+    std::cout << std::endl;
+  }
 
   // Problem 2: change to top plate BC
   input.u_bc = BoundaryCondition(bc_val, 0, 0, 0);
@@ -29,7 +40,7 @@ main()
   std::cout << "Problem 2, top plate BC" << std::endl;
   for (unsigned int N : {8, 16, 32, 64, 128})
   {
-    std::cout << "  N = " << N << "x" << N << " - ";
+    std::cout << "N = " << N << "x" << N << " - ";
     Problem problem(N, N, input);
     problem.run();
     problem.save(Variables::u, "results/p2/" + to_string(N) + "_u.csv");

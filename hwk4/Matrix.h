@@ -1,7 +1,7 @@
 #ifndef MATRIX_H
 #define MATRIX_H
 
-// #define NDEBUG
+#define NDEBUG
 #include <cassert>
 #include <fstream>
 #include <vector>

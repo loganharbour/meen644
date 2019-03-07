@@ -4,22 +4,14 @@ namespace Flow2D
 {
 
 void
-Problem::fillCoefficients(Variable & var)
+Problem::fillCoefficients(const Variable & var)
 {
-  switch (var.name)
-  {
-    case Variables::u:
-      uCoefficients();
-      break;
-    case Variables::v:
-      vCoefficients();
-      break;
-    case Variables::pc:
-      pcCoefficients();
-      break;
-    case Variables::p:
-      break;
-  }
+  if (var.name == Variables::u)
+    uCoefficients();
+  else if (var.name == Variables::v)
+    vCoefficients();
+  else if (var.name == Variables::pc)
+    pcCoefficients();
 
   if (debug)
     var.printCoefficients(var.string, true);

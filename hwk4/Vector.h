@@ -8,6 +8,9 @@
 
 using namespace std;
 
+/**
+ * Class that stores a 1D vector and enables printing and saving.
+ */
 template <typename T>
 class Vector
 {

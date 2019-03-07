@@ -2,6 +2,7 @@
 #define PROBLEM_H
 
 #include <cmath>
+#include <ctime>
 #include <iomanip>
 #include <iostream>
 #include <map>
@@ -51,7 +52,7 @@ private:
   void vCorrect();
 
   // Problem_coefficients.cpp
-  void fillCoefficients(Variable & var);
+  void fillCoefficients(const Variable & var);
   void pcCoefficients();
   void uCoefficients();
   void vCoefficients();
@@ -104,6 +105,8 @@ protected:
 
   // Whether or not we converged
   bool converged = false;
+  // Run start time
+  clock_t start;
 };
 
 } // namespace Flow2D

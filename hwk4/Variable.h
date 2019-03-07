@@ -26,7 +26,7 @@ struct BoundaryCondition
 struct Coefficients
 {
   double p = 0, n = 0, e = 0, s = 0, w = 0, b = 0;
-  void print(const unsigned int pr = 5)
+  void print(const unsigned int pr = 5) const
   {
     cout << setprecision(pr) << scientific << "n = " << n << ", e = " << e << ", s = " << s
          << ", w = " << w << ", p = " << p << ", b = " << b << endl;
@@ -111,8 +111,9 @@ struct Variable
   void reset() { phi = 0; }
 
   // Coefficient debug
-  void
-  printCoefficients(const string prefix = "", const bool newline = false, const unsigned int pr = 5)
+  void printCoefficients(const string prefix = "",
+                         const bool newline = false,
+                         const unsigned int pr = 5) const
   {
     for (unsigned int i = 1; i < Nx - 1; ++i)
       for (unsigned int j = 1; j < Ny - 1; ++j)

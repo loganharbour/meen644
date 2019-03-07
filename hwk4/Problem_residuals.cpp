@@ -16,8 +16,10 @@ Problem::computeResiduals()
 
   // Print residuals
   if (converged)
-    cout << "Converged in " << iterations << " iterations: ";
-  if (converged || debug) {
+    cout << "Converged in " << noshowpos << fixed << setprecision(3)
+         << 1.0 * (clock() - start) / CLOCKS_PER_SEC << " sec in " << iterations << " iterations: ";
+  if (converged || debug)
+  {
     cout << noshowpos << setprecision(2) << scientific;
     cout << "u = " << Ru;
     cout << ", v = " << Rv;
@@ -55,4 +57,4 @@ Problem::velocityResidual(const Variable & var) const
   return numer / denom;
 }
 
-}
+} // namespace Flow2D

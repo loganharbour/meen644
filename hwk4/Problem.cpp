@@ -41,6 +41,9 @@ Problem::Problem(const unsigned int Nx, const unsigned int Ny, const InputArgume
 void
 Problem::run()
 {
+  // Store start time
+  start = clock();
+
   for (unsigned int l = 0; l < max_its; ++l)
   {
     ++iterations;

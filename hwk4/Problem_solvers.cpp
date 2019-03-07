@@ -21,11 +21,13 @@ Problem::solve(Variable & var)
   if (u.bc.nonzero()) {
     sweepColumns(var);
     sweepRows(var);
+    sweepColumns(var, false);
   }
   // BC is in the y-direction, sweep south to north
   else {
     sweepRows(var);
     sweepColumns(var);
+    sweepRows(var, false);
   }
 
   if (debug)

@@ -20,6 +20,9 @@ Problem::fillCoefficients(Variable & var)
     case Variables::p:
       break;
   }
+
+  if (debug)
+    var.printCoefficients(var.string, true);
 }
 
 void
@@ -30,7 +33,6 @@ Problem::pcCoefficients()
     {
       Coefficients & a = pc.a(i, j);
 
-      // Each of the above is only valid off boundary
       if (i != 1)
         a.w = rho * dy * dy / u.a(i - 1, j).p;
       if (i != pc.Mx - 1)
@@ -42,13 +44,6 @@ Problem::pcCoefficients()
       a.p = a.n + a.e + a.s + a.w;
       a.b = rho * (dy * (u(i - 1, j) - u(i, j)) + dx * (v(i, j - 1) - v(i, j)));
     }
-
-  if (loud)
-  {
-    cout << "pc coefficients: " << endl;
-    pc.a.print();
-    cout << endl;
-  }
 }
 
 void
@@ -95,16 +90,9 @@ Problem::uCoefficients()
       // Pressure RHS
       b = dy * (p(i, j) - p(i + 1, j));
 
-      // Compute Perchlet number and store into u_a(i, j)
+      // Compute and store power law coefficients
       velocityCoefficients(u.a(i, j), D, F, b);
     }
-
-  if (loud)
-  {
-    cout << "u coefficients: " << endl;
-    u.a.print();
-    cout << endl;
-  }
 }
 
 void
@@ -151,36 +139,21 @@ Problem::vCoefficients()
       // Pressure RHS
       b = dx * (p(i, j) - p(i, j + 1));
 
-      // Compute Perchlet number and store into a_v(i, j)
+      // Compute and store power law coefficients
       velocityCoefficients(v.a(i, j), D, F, b);
     }
-
-  if (loud)
-  {
-    cout << "v coefficients: " << endl;
-    v.a.print();
-    cout << endl;
-  }
 }
 
 void
 Problem::velocityCoefficients(Coefficients & a,
                               const Coefficients & D,
                               const Coefficients & F,
-                              const double b)
+                              const double & b)
 {
-  // Perchlet number
-  Coefficients P;
-  P.n = F.n / D.n;
-  P.e = F.e / D.e;
-  P.s = F.s / D.s;
-  P.w = F.w / D.w;
-
-  // Fill coefficients
-  a.n = D.n * fmax(0, pow(1 - 0.1 * fabs(P.n), 5)) + fmax(-F.n, 0);
-  a.e = D.e * fmax(0, pow(1 - 0.1 * fabs(P.e), 5)) + fmax(-F.e, 0);
-  a.s = D.s * fmax(0, pow(1 - 0.1 * fabs(P.s), 5)) + fmax(F.s, 0);
-  a.w = D.w * fmax(0, pow(1 - 0.1 * fabs(P.w), 5)) + fmax(F.w, 0);
+  a.n = D.n * fmax(0, pow(1 - 0.1 * fabs(F.n / D.n), 5)) + fmax(-F.n, 0);
+  a.e = D.e * fmax(0, pow(1 - 0.1 * fabs(F.e / D.e), 5)) + fmax(-F.e, 0);
+  a.s = D.s * fmax(0, pow(1 - 0.1 * fabs(F.s / D.s), 5)) + fmax(F.s, 0);
+  a.w = D.w * fmax(0, pow(1 - 0.1 * fabs(F.w / D.w), 5)) + fmax(F.w, 0);
   a.p = a.n + a.e + a.s + a.w;
   a.b = b;
 }

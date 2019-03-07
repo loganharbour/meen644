@@ -1,5 +1,5 @@
-#ifndef Problem_H
-#define Problem_H
+#ifndef PROBLEM_H
+#define PROBLEM_H
 
 #include <cmath>
 #include <iomanip>
@@ -8,7 +8,8 @@
 
 #include "Variable.h"
 
-namespace Flow2D {
+namespace Flow2D
+{
 
 using namespace std;
 
@@ -18,7 +19,7 @@ struct InputArguments
   BoundaryCondition u_bc, v_bc;
   double L_ref, u_ref;
   double rho, mu;
-  bool loud = false;
+  bool debug = false;
   double alpha_p = 0.7;
   double alpha_uv = 0.5;
   unsigned int max_its = 100000;
@@ -31,8 +32,16 @@ public:
   Problem(const unsigned int Nx, const unsigned int Ny, const InputArguments & input);
 
   void run();
-  void print(const Variables var, const string prefix = "") { variables.at(var).print(prefix); }
-  void save(const Variables var, const string filename) { variables.at(var).save(filename); }
+
+  // Public access to printing and saving variable results
+  void print(const Variables var,
+             const string prefix = "",
+             const bool newline = false,
+             const unsigned int pr = 5) const
+  {
+    variables.at(var).print(prefix, newline, pr);
+  }
+  void save(const Variables var, const string filename) const { variables.at(var).save(filename); }
 
 private:
   // Problem_corrections.cpp
@@ -49,12 +58,12 @@ private:
   void velocityCoefficients(Coefficients & a,
                             const Coefficients & D,
                             const Coefficients & F,
-                            const double b);
+                            const double & b);
 
   // Problem_residuals.cpp
   void computeResiduals();
-  double pResidual();
-  double velocityResidual(const Variable & var);
+  double pResidual() const;
+  double velocityResidual(const Variable & var) const;
 
   // Problem_solvers.cpp
   void solve();
@@ -76,8 +85,8 @@ protected:
   // Residual references
   const double L_ref, u_ref;
 
-  // Loud (debug)
-  const bool loud;
+  // Enable debug mode (printing extra output)
+  const bool debug;
 
   // Maximum iterations
   const unsigned int max_its;
@@ -85,17 +94,17 @@ protected:
   const double tol;
   // Pressure relaxation
   const double alpha_p;
-  // Number of iterations
+  // Number of iterations completed
   unsigned int iterations = 0;
 
   // Variables
   Variable u, v, pc, p;
   // Variable map
-  map<Variables, const Variable &> variables;
+  map<const Variables, const Variable &> variables;
 
   // Whether or not we converged
   bool converged = false;
 };
 
-}
-#endif /* Problem_H */
+} // namespace Flow2D
+#endif /* PROBLEM_H */

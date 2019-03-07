@@ -30,8 +30,7 @@ main()
     problem.run();
     problem.print(Variables::u, "u =");
     problem.print(Variables::v, "v =");
-    problem.print(Variables::p, "p =");
-    std::cout << std::endl;
+    problem.print(Variables::p, "p =", true);
   }
 
   // Problem 2: change to top plate BC

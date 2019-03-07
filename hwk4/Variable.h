@@ -13,42 +13,23 @@ using namespace std;
 // Storage for boundary conditions
 struct BoundaryCondition
 {
-  BoundaryCondition(double top = 0, double right = 0, double bottom = 0, double left = 0)
+  BoundaryCondition() {}
+  BoundaryCondition(const double top, const double right, const double bottom, const double left)
     : top(top), right(right), bottom(bottom), left(left)
   {
   }
   bool nonzero() const { return top != 0 || right != 0 || bottom != 0 || left != 0; }
-  double top, right, bottom, left;
+  double top = 0, right = 0, bottom = 0, left = 0;
 };
 
 // Storage for coefficients for a single CV
 struct Coefficients
 {
-  double p, n, e, s, w, b = 0;
-  void print(const unsigned int pr = 6)
+  double p = 0, n = 0, e = 0, s = 0, w = 0, b = 0;
+  void print(const unsigned int pr = 5)
   {
     cout << setprecision(pr) << scientific << "n = " << n << ", e = " << e << ", s = " << s
          << ", w = " << w << ", p = " << p << ", b = " << b << endl;
-  }
-};
-
-// Storage for coefficients for every CV
-struct MatrixCoefficients
-{
-  MatrixCoefficients() {}
-  MatrixCoefficients(const unsigned int Nx, const unsigned int Ny) : vals(Nx, Ny), Nx(Nx), Ny(Ny) {}
-  Coefficients & operator()(unsigned int i, unsigned int j) { return vals(i, j); }
-  const Coefficients & operator()(unsigned int i, unsigned int j) const { return vals(i, j); }
-  Matrix<Coefficients> vals;
-  const unsigned int Nx = 0, Ny = 0;
-  void print(const string prefix = "", const unsigned int pr = 6)
-  {
-    for (unsigned int i = 1; i < Nx - 1; ++i)
-      for (unsigned int j = 1; j < Ny - 1; ++j)
-      {
-        cout << prefix << "(" << i << ", " << j << "): ";
-        vals(i, j).print(pr);
-      }
   }
 };
 
@@ -78,14 +59,15 @@ VariableString(Variables var)
   }
 }
 
+// General storage structure for primary and auxilary variables
 struct Variable
 {
-  // Constructor for a solved variable
+  // Constructor for a primary variable
   Variable(const Variables name,
            const unsigned int Nx,
            const unsigned int Ny,
            const double alpha,
-           BoundaryCondition bc = BoundaryCondition())
+           const BoundaryCondition bc = BoundaryCondition())
     : name(name),
       string(VariableString(name)),
       Nx(Nx),
@@ -112,23 +94,35 @@ struct Variable
       phi.setRow(My, bc.top);
   }
 
-  // Constructor for an aux variable
-  Variable(const Variables name,
-           const unsigned int Nx,
-           const unsigned int Ny)
+  // Constructor for an auxilary variable (no solver storage)
+  Variable(const Variables name, const unsigned int Nx, const unsigned int Ny)
     : name(name), string(VariableString(name)), Nx(Nx), Ny(Ny), Mx(Nx - 1), My(Ny - 1), phi(Nx, Ny)
   {
   }
 
-  // Matrix operations
-  const double & operator()(unsigned int i, unsigned int j) const { return phi(i, j); }
-  double & operator()(unsigned int i, unsigned int j) { return phi(i, j); }
-  void print(const string prefix = "", const bool newline = false) const
+  // Solution matrix operations
+  const double & operator()(const unsigned int i, const unsigned int j) const { return phi(i, j); }
+  double & operator()(const unsigned int i, const unsigned int j) { return phi(i, j); }
+  void print(const string prefix = "", const bool newline = false, const unsigned int pr = 5) const
   {
-    phi.print(prefix, newline);
+    phi.print(prefix, newline, pr);
   }
   void save(const string filename) const { phi.save(filename); }
   void reset() { phi = 0; }
+
+  // Coefficient debug
+  void
+  printCoefficients(const string prefix = "", const bool newline = false, const unsigned int pr = 5)
+  {
+    for (unsigned int i = 1; i < Nx - 1; ++i)
+      for (unsigned int j = 1; j < Ny - 1; ++j)
+      {
+        cout << prefix << "(" << i << ", " << j << "): ";
+        a(i, j).print(pr);
+      }
+    if (newline)
+      cout << endl;
+  }
 
   // Variable enum name
   const Variables name;
@@ -143,14 +137,14 @@ struct Variable
   // Boundary conditions
   const BoundaryCondition bc = BoundaryCondition();
   // Matrix coefficients
-  MatrixCoefficients a;
+  Matrix<Coefficients> a;
   // Variable solution
   Matrix<double> phi;
-  // Linear system LHS
+  // Linear system LHS for both sweep directions
   TriDiagonal<double> Ax, Ay;
-  // Linear system RHS
+  // Linear system RHS for both sweep directions
   Vector<double> bx, by;
 };
 
-}
+} // namespace Flow2D
 #endif /* VARIABLE_H */

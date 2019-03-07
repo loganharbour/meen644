@@ -31,7 +31,7 @@
 \usepackage[]{algorithm2e}
 \usepackage{float}
 \usepackage[cache=false]{minted}
-\renewcommand{\MintedPygmentize}{/Users/loganharbour/miniconda/bin/pygmentize}
+\renewcommand{\MintedPygmentize}{/Users/logan/miniconda/bin/pygmentize}
 \usepackage[scaled]{beramono}
 \usepackage[T1]{fontenc}
 \usepackage{diagbox}
@@ -300,7 +300,7 @@ The integration of the $x$ and $y$-momentum equations (generalizing again with $
 
 \subsubsection{$u$-velocity guess update}
 
-For simplicity we will define the width of the $u$-CV defined by the central node $u_{i,j}$ as
+In all discussion that follow, we are considering a $u$-CV defined by the central node $u_{i,j}$. For simplicity we will define the width of each $u$-CV as
 \begin{equation}
 	\Delta x^{u_{i,j}} = \begin{cases}
 		\Delta x\,, & 1 < i < M_x^u - 1 \\
@@ -320,7 +320,7 @@ and we will also define the $y$-distance from $u_{i,j}$ to the north and south p
 		\end{cases}\,.
 	\end{align}
 \end{subequations}
-The diffusion coefficients for the $u$-CV defined by the central node $u_{i,j}$ are then defined as
+The diffusion coefficients are then defined as
 \begin{subequations}
 	\begin{align}
 		D_n^{u_{i,j}} & = \frac{\mu \Delta x^{u_{i,j}}}{\delta y^{u_{i,j}}_{p_n}}\,,\\
@@ -329,7 +329,7 @@ The diffusion coefficients for the $u$-CV defined by the central node $u_{i,j}$ 
 		D_w^{u_{i,j}} & = \frac{\mu\Delta y}{\Delta x}\,.
 	\end{align}
 \end{subequations}
-Lastly, the flow rates for the $u$-CV defined by the central node $u_{i,j}$ are then
+Lastly, the flow rates are defined as
 \begin{subequations}
 	\begin{align}
 		F_n^{u_{i,j}} & = \rho \Delta x^{u_{i,j}} \begin{cases}
@@ -355,7 +355,7 @@ Lastly, the flow rates for the $u$-CV defined by the central node $u_{i,j}$ are 
 
 \subsubsection{$v$-velocity guess update}
 
-Similarly, we will define the height of the $v$-CV defined by the central node $v_{i,j}$ as
+Similarly, we will consider a $v$-CV defined by the central node $v_{i,j}$. The width of each $v$-CV is defined as
 \begin{equation}
 	\Delta y^{v_{i,j}} = \begin{cases}
 		\Delta y \,, & 1 < j < M_y^v - 1 \\
@@ -375,8 +375,16 @@ and we will also define the $x$-distance from $v_{i,j}$ to the east and west pre
 		\end{cases}\,.
 	\end{align}
 \end{subequations}
-
-Lastly, the flow rates for the $u$-CV defined by the central node $u_{i,j}$ are then
+The diffusion coefficients are then defined as
+\begin{subequations}
+	\begin{align}
+		D_n^{v_{i,j}} & = \frac{\mu \Delta x}{\Delta y}\,,\\
+		D_e^{v_{i,j}} & = \frac{\mu \Delta y^{v_{i,j}}}{\delta x^{v_{i,j}}_{p_e}}\,,\\
+		D_s^{v_{i,j}} & = \frac{\mu \Delta x}{\Delta y}\,,\\
+		D_w^{v_{i,j}} & = \frac{\mu\Delta y^{v_{i,j}}}{\delta x^{v_{i,j}}_{p_w}}\,.
+	\end{align}
+\end{subequations}
+Lastly, the flow rates are defined as
 \begin{subequations}
 	\begin{align}
 		F_n^{v_{i,j}} & = \rho \Delta x \begin{cases}
@@ -575,7 +583,6 @@ For the implementation, we have the following files:
 \subsection*{Makefile}
 \inputminted[fontsize=\scriptsize]{Makefile}{../Makefile}
 
-\newpage
 \subsection*{hwk4.cpp}
 \inputminted[fontsize=\scriptsize]{c++}{../hwk4.cpp}
 

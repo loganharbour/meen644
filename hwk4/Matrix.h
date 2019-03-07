@@ -70,14 +70,14 @@ public:
   }
 
   // Set the j-th row to v
-  void setRow(unsigned int j, T v)
+  void setRow(const unsigned int j, const T v)
   {
     assert(j < M);
     for (unsigned int i = 0; i < N; ++i)
       A[i][j] = v;
   }
   // Set the i-th column to v
-  void setColumn(unsigned int i, T v)
+  void setColumn(const unsigned int i, const T v)
   {
     assert(i < N);
     for (unsigned int j = 0; j < M; ++j)

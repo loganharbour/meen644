@@ -18,8 +18,8 @@ Problem::Problem(const unsigned int Nx, const unsigned int Ny, const InputArgume
     // Material properties
     rho(input.rho),
     mu(input.mu),
-    // Enable debug (loud)
-    loud(input.loud),
+    // Enable debug
+    debug(input.debug),
     // Solver properties
     max_its(input.max_its),
     tol(input.tol),
@@ -44,7 +44,7 @@ Problem::run()
   for (unsigned int l = 0; l < max_its; ++l)
   {
     ++iterations;
-    if (loud)
+    if (debug)
       cout << "Iteration " << setw(3) << left << l << ": " << endl;
 
     // Solve for all variables
@@ -64,4 +64,4 @@ Problem::run()
     cout << "Did not converge after " << max_its << " iterations!" << endl;
 }
 
-} 
+}

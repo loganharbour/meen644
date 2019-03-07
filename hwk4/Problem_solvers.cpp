@@ -28,7 +28,7 @@ Problem::solve(Variable & var)
     sweepColumns(var);
   }
 
-  if (loud)
+  if (debug)
     var.print(var.string + " sweep solution = ", true);
 }
 
@@ -61,7 +61,7 @@ Problem::sweepColumns(Variable & var, const bool west_east)
 void
 Problem::sweepColumn(const unsigned int i, Variable & var)
 {
-  if (loud)
+  if (debug)
     cout << "Solving " << var.string << " column " << i << endl;
 
   auto & A = var.Ay;
@@ -88,7 +88,7 @@ Problem::sweepColumn(const unsigned int i, Variable & var)
       A.setMiddleRow(j - 1, -a.s, a.p * var.w, -a.n);
   }
 
-  if (loud)
+  if (debug)
   {
     A.print("A =");
     b.print("b =");
@@ -97,7 +97,7 @@ Problem::sweepColumn(const unsigned int i, Variable & var)
   // Solve
   A.solveTDMA(b);
 
-  if (loud)
+  if (debug)
     b.print("sol =", true);
 
   // Store solution
@@ -108,7 +108,7 @@ Problem::sweepColumn(const unsigned int i, Variable & var)
 void
 Problem::sweepRow(const unsigned int j, Variable & var)
 {
-  if (loud)
+  if (debug)
     cout << "Solving " << var.string << " row " << j << endl;
 
   auto & A = var.Ax;
@@ -135,7 +135,7 @@ Problem::sweepRow(const unsigned int j, Variable & var)
       A.setMiddleRow(i - 1, -a.w, a.p * var.w, -a.e);
   }
 
-  if (loud)
+  if (debug)
   {
     A.print("A =");
     b.print("b =");
@@ -144,7 +144,7 @@ Problem::sweepRow(const unsigned int j, Variable & var)
   // Solve
   A.solveTDMA(b);
 
-  if (loud)
+  if (debug)
     b.print("sol =", true);
 
   // Store solution

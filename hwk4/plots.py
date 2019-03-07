@@ -41,7 +41,6 @@ fig.set_figheight(3.5)
 for N in Ns:
     ax[0].plot(y[N], u[N], label='{}x{}'.format(N, N), linewidth=1)
     ax[1].plot(x[N], v[N], linewidth=1)
-
 ax[0].plot(ref_y, ref_u, '.k', label='Roy et. al (2015)', markersize=4)
 ax[1].plot(ref_x, ref_v, '.k', markersize=4)
 ax[0].set_xlabel(r'Normalized $y$')
@@ -52,6 +51,6 @@ ax[0].grid()
 ax[1].grid()
 handles, labels = ax[0].get_legend_handles_labels()
 lgd = ax[0].legend(handles, labels, loc='lower center', bbox_to_anchor=(1.0, -0.29),
-                      ncol=7, fontsize=9)
+                   ncol=7, fontsize=9)
 fig.tight_layout()
 fig.savefig('results/p2.pdf', bbox_inches='tight', bbox_extra_artists=(lgd,))

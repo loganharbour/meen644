@@ -17,7 +17,7 @@ Problem::computeResiduals()
   // Print residuals
   if (converged)
     cout << "Converged in " << iterations << " iterations: ";
-  if (converged || loud) {
+  if (converged || debug) {
     cout << noshowpos << setprecision(2) << scientific;
     cout << "u = " << Ru;
     cout << ", v = " << Rv;
@@ -26,7 +26,7 @@ Problem::computeResiduals()
 }
 
 double
-Problem::pResidual()
+Problem::pResidual() const
 {
   double numer = 0;
   for (unsigned int i = 1; i < pc.Mx; ++i)
@@ -36,7 +36,7 @@ Problem::pResidual()
 }
 
 double
-Problem::velocityResidual(const Variable & var)
+Problem::velocityResidual(const Variable & var) const
 {
   double numer, numer_temp, denom = 0;
   for (unsigned int i = 1; i < var.Mx; ++i)

@@ -18,7 +18,7 @@ Problem::pCorrect()
     for (unsigned int j = 1; j < pc.My; ++j)
       p(i, j) += alpha_p * pc(i, j);
 
-  // Set correction back to zero
+  // Set pressure correction back to zero
   pc.reset();
 
   // Apply the edge values as velocity is set
@@ -33,7 +33,7 @@ Problem::pCorrect()
     p(pc.Mx, j) = p(pc.Mx - 1, j);
   }
 
-  if (loud)
+  if (debug)
     p.print("p corrected = ", true);
 }
 
@@ -43,7 +43,8 @@ Problem::uCorrect()
   for (unsigned int i = 1; i < u.Mx; ++i)
     for (unsigned int j = 1; j < u.My; ++j)
       u(i, j) += dy * (pc(i, j) - pc(i + 1, j)) / u.a(i, j).p;
-  if (loud)
+
+  if (debug)
     u.print("u corrected = ", true);
 }
 
@@ -53,8 +54,8 @@ Problem::vCorrect()
   for (unsigned int i = 1; i < v.Mx; ++i)
     for (unsigned int j = 1; j < v.My; ++j)
       v(i, j) += dx * (pc(i, j) - pc(i, j + 1)) / v.a(i, j).p;
-
-  if (loud)
+      
+  if (debug)
     v.print("v corrected = ", true);
 }
 

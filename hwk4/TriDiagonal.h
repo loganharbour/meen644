@@ -17,22 +17,22 @@ class TriDiagonal
 {
 public:
   TriDiagonal() {}
-  TriDiagonal(unsigned int N, T v = 0) : N(N), A(N, v), B(N, v), C(N - 1, v) {}
+  TriDiagonal(const unsigned int N, const T v = 0) : N(N), A(N, v), B(N, v), C(N - 1, v) {}
 
   // Setters for the top, middle, and bottom rows
-  void setTopRow(T b, T c)
+  void setTopRow(const T b, const T c)
   {
     B[0] = b;
     C[0] = c;
   }
-  void setMiddleRow(unsigned int i, T a, T b, T c)
+  void setMiddleRow(const unsigned int i, const T a, const T b, const T c)
   {
     assert(i < N - 1 && i != 0);
     A[i] = a;
     B[i] = b;
     C[i] = c;
   }
-  void setBottomRow(T a, T b)
+  void setBottomRow(const T a, const T b)
   {
     A[N - 1] = a;
     B[N - 1] = b;

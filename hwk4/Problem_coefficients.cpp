@@ -13,8 +13,10 @@ Problem::fillCoefficients(const Variable & var)
   else if (var.name == Variables::pc)
     pcCoefficients();
 
-  if (debug)
+  if (debug) {
+    cout << var.string << " coefficients: " << endl;
     var.printCoefficients(var.string, true);
+  }
 }
 
 void

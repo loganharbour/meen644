@@ -48,7 +48,7 @@ Problem::run()
   {
     ++iterations;
     if (debug)
-      cout << "Iteration " << setw(3) << left << l << ": " << endl;
+      cout << "Iteration " << l << endl << endl;
 
     // Solve for all variables
     solve();

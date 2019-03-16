@@ -14,17 +14,22 @@ Problem::solve()
 void
 Problem::solve(Variable & var)
 {
+  if (debug)
+    cout << "Solving variable " << var.string << endl << endl;
+
   // Fill the coefficients
   fillCoefficients(var);
 
   // BC is in the x-direction, sweep left to right
-  if (u.bc.nonzero()) {
+  if (u.bc.nonzero())
+  {
     sweepColumns(var);
     sweepRows(var);
     sweepColumns(var, false);
   }
   // BC is in the y-direction, sweep south to north
-  else {
+  else
+  {
     sweepRows(var);
     sweepColumns(var);
     sweepRows(var, false);
@@ -39,12 +44,20 @@ Problem::sweepRows(Variable & var, const bool south_north)
 {
   // Sweep south to north
   if (south_north)
+  {
+    if (debug)
+      cout << "Sweeping " << var.string << " south to north" << endl << endl;
     for (int j = 1; j < var.My; ++j)
       sweepRow(j, var);
+  }
   // Sweep north to south
   else
+  {
+    if (debug)
+      cout << "Sweeping " << var.string << " north to south" << endl << endl;
     for (int j = var.My - 1; j > 0; --j)
       sweepRow(j, var);
+  }
 }
 
 void
@@ -52,12 +65,20 @@ Problem::sweepColumns(Variable & var, const bool west_east)
 {
   // Sweep west to east
   if (west_east)
+  {
+    if (debug)
+      cout << "Sweeping " << var.string << " west to east" << endl << endl;
     for (int i = 1; i < var.Mx; ++i)
       sweepColumn(i, var);
+  }
   // Sweep east to west
   else
+  {
+    if (debug)
+      cout << "Sweeping " << var.string << " east to west" << endl << endl;
     for (int i = var.Mx - 1; i > 0; --i)
       sweepColumn(i, var);
+  }
 }
 
 void

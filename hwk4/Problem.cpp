@@ -59,12 +59,11 @@ Problem::run()
     // Compute residuals and exit if converged
     computeResiduals();
     if (converged)
-      break;
+      return;
   }
 
   // Oops. Didn't converge
-  if (!converged)
-    cout << "Did not converge after " << max_its << " iterations!" << endl;
+  cout << "Did not converge after " << max_its << " iterations!" << endl;
 }
 
 }

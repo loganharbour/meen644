@@ -42,43 +42,35 @@ Problem::solve(Variable & var)
 void
 Problem::sweepRows(Variable & var, const bool south_north)
 {
+  const string dir = (south_north ? " south to north" : " north to south");
+  if (debug)
+    cout << "Sweeping" << var.string << dir << endl;
+
   // Sweep south to north
   if (south_north)
-  {
-    if (debug)
-      cout << "Sweeping " << var.string << " south to north" << endl << endl;
     for (int j = 1; j < var.My; ++j)
       sweepRow(j, var);
-  }
   // Sweep north to south
   else
-  {
-    if (debug)
-      cout << "Sweeping " << var.string << " north to south" << endl << endl;
     for (int j = var.My - 1; j > 0; --j)
       sweepRow(j, var);
-  }
 }
 
 void
 Problem::sweepColumns(Variable & var, const bool west_east)
 {
+  const string dir = (west_east ? " east to west" : " west to east");
+  if (debug)
+    cout << "Sweeping" << var.string << dir << endl;
+
   // Sweep west to east
   if (west_east)
-  {
-    if (debug)
-      cout << "Sweeping " << var.string << " west to east" << endl << endl;
     for (int i = 1; i < var.Mx; ++i)
       sweepColumn(i, var);
-  }
   // Sweep east to west
   else
-  {
-    if (debug)
-      cout << "Sweeping " << var.string << " east to west" << endl << endl;
     for (int i = var.Mx - 1; i > 0; --i)
       sweepColumn(i, var);
-  }
 }
 
 void

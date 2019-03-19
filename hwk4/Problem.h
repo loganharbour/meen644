@@ -75,6 +75,9 @@ private:
   void sweepRow(const unsigned int j, Variable & var);
   void solveVelocities();
 
+  // Quicker v^5 for velocityCoefficients() (yes, it's actually much faster...)
+  static const double pow5(const double & v) { return v * v * v * v * v; }
+
 protected:
   // Number of pressure CVs
   const unsigned int Nx, Ny;

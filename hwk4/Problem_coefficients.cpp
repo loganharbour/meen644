@@ -144,10 +144,10 @@ Problem::velocityCoefficients(Coefficients & a,
                               const Coefficients & F,
                               const double & b)
 {
-  a.n = D.n * fmax(0, pow(1 - 0.1 * fabs(F.n / D.n), 5)) + fmax(-F.n, 0);
-  a.e = D.e * fmax(0, pow(1 - 0.1 * fabs(F.e / D.e), 5)) + fmax(-F.e, 0);
-  a.s = D.s * fmax(0, pow(1 - 0.1 * fabs(F.s / D.s), 5)) + fmax(F.s, 0);
-  a.w = D.w * fmax(0, pow(1 - 0.1 * fabs(F.w / D.w), 5)) + fmax(F.w, 0);
+  a.n = D.n * fmax(0, pow5(1 - 0.1 * fabs(F.n / D.n))) + fmax(-F.n, 0);
+  a.e = D.e * fmax(0, pow5(1 - 0.1 * fabs(F.e / D.e))) + fmax(-F.e, 0);
+  a.s = D.s * fmax(0, pow5(1 - 0.1 * fabs(F.s / D.s))) + fmax(F.s, 0);
+  a.w = D.w * fmax(0, pow5(1 - 0.1 * fabs(F.w / D.w))) + fmax(F.w, 0);
   a.p = a.n + a.e + a.s + a.w;
   a.b = b;
 }

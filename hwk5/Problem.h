@@ -24,7 +24,8 @@ struct InputArguments
   bool debug = false;
   double alpha_p = 0.7;
   double alpha_uv = 0.5;
-  unsigned int max_its = 100000;
+  unsigned int max_main_its = 50000;
+  unsigned int max_aux_its = 20000;
   double tol = 1.0e-6;
 };
 
@@ -106,7 +107,7 @@ protected:
   const bool debug;
 
   // Maximum iterations
-  const unsigned int max_its;
+  const unsigned int max_main_its, max_aux_its;
   // Iteration tolerance
   const double tol;
   // Pressure relaxation

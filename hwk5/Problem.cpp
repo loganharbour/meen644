@@ -27,7 +27,8 @@ Problem::Problem(const unsigned int Nx, const unsigned int Ny, const InputArgume
     // Enable debug
     debug(input.debug),
     // Solver properties
-    max_its(input.max_its),
+    max_main_its(input.max_main_its),
+    max_aux_its(input.max_aux_its),
     tol(input.tol),
     alpha_p(input.alpha_p),
     // Initialize variables for u, v, pc (solved variables)
@@ -55,22 +56,28 @@ Problem::run()
   // Store start time
   start = clock();
 
-  for (unsigned int l = 0; l < max_its; ++l)
+  // Solve main variables
+  for (unsigned int l = 0; l < max_main_its; ++l)
   {
-    // Solve and correct main variables
-    if (!main_converged)
-    {
-      solveMain();
-      correctMain();
-      computeMainResiduals();
-    }
-    // Solve and correct aux variables
-    else
-    {
-      solveAux();
-      correctAux();
-      computeAuxResiduals();
-    }
+    solveMain();
+    correctMain();
+    computeMainResiduals();
+
+    // Break out if we've converged
+    if (main_converged)
+      break;
+  }
+
+  // Ensure main variables converged
+  if (!main_converged)
+    cout << "Main variables did not converge after " << max_main_its << " iterations!" << endl;
+
+  // Solve aux variables
+  for (unsigned int l = 0; l < max_aux_its; ++l)
+  {
+    solveAux();
+    correctAux();
+    computeAuxResiduals();
 
     // Exit if everything is converged
     if (converged)
@@ -78,8 +85,6 @@ Problem::run()
   }
 
   // Oops. Didn't converge
-  cout << "Did not converge after " << main_iterations << " main iterations and " << aux_iterations
-       << "aux iterations!" << endl;
+  cout << "Aux variables did not converge after " << max_aux_its << " iterations!" << endl;
 }
-
 } // namespace Flow2D

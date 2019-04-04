@@ -12,11 +12,38 @@ q = 500
 k = 0.609
 
 ###############################################################################
-# Load results
+# Problem 3 prints
 
-u = np.loadtxt('results/u.csv', delimiter=',').T
-v = np.loadtxt('results/v.csv', delimiter=',').T
-T = np.loadtxt('results/T.csv', delimiter=',').T
+# Load coarse results
+u = np.loadtxt('results/coarse_u.csv', delimiter=',').T
+p = np.loadtxt('results/coarse_p.csv', delimiter=',').T
+T = np.loadtxt('results/coarse_T.csv', delimiter=',').T
+print(p.shape)
+
+# Normalize P
+p -= p[p.shape[0] - 1, :]
+
+for var in [u, p, T]:
+    for i in range(var.shape[0]):
+        line = '{} & '.format(i + 1)
+        for j in range(var.shape[1]):
+            if var is T:
+                line += '{:.5f}'.format(var[i,j])
+            else:
+                line += '{:.5e}'.format(var[i,j])
+            if j == var.shape[1] - 1:
+                line += " \\\\"
+            else:
+                line += " & "
+        print(line)
+    print()
+
+###############################################################################
+# Load refined results
+
+u = np.loadtxt('results/fine_u.csv', delimiter=',').T
+v = np.loadtxt('results/fine_v.csv', delimiter=',').T
+T = np.loadtxt('results/fine_T.csv', delimiter=',').T
 
 dx = Lx / (T.shape[0] - 2)
 dy = Ly / (T.shape[1] - 2)

@@ -36,15 +36,15 @@ main()
   std::cout << "Problem 3: check symmetry" << std::endl;
   Problem problem3(10, 5, input);
   problem3.run();
-  problem3.print(Variables::u, "u =");
-  problem3.print(Variables::p, "p =");
-  problem3.print(Variables::T, "T = ", true);
+  problem3.save(Variables::u, "results/coarse_u.csv");
+  problem3.save(Variables::p, "results/coarse_p.csv");
+  problem3.save(Variables::T, "results/coarse_T.csv");
 
   // Problem 4: 180x54 grid
   std::cout << "Problem 4: 180 x 54 grid" << std::endl;
   Problem problem4(180, 54, input);
   problem4.run();
-  problem4.save(Variables::u, "results/u.csv");
-  problem4.save(Variables::v, "results/v.csv");
-  problem4.save(Variables::T, "results/T.csv");
+  problem4.save(Variables::u, "results/fine_u.csv");
+  problem4.save(Variables::v, "results/fine_v.csv");
+  problem4.save(Variables::T, "results/fine_T.csv");
 }

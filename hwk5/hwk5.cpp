@@ -10,10 +10,10 @@ main()
   double Ly = 0.02;
   double cp = 4183;
   double k = 0.609;
-  double rho = 998.3;
+  double rho = 988.3;
   double mu = 0.001002;
   double Re = 100;
-  double u_bc_val = Re * mu / (2 * rho * Ly);
+  double u_bc_val = Re * mu / (rho * Ly);
   double T_bc_val = 25;
   double q_bc_val = 500;
 

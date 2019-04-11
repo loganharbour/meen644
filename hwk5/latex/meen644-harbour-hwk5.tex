@@ -76,11 +76,438 @@ Consider an incompressible laminar flow between two infinite parallel plates. Fl
 
 \subsection{Two-dimensional diffusion-convection}
 
+With two-dimensional diffusion and convection with constant material properties, we have the PDE
+\begin{equation}
+\begin{cases}
+\pdv{u}{x} + \pdv{v}{y} = 0\,,\\
+\rho u \pdv{u}{x} + \rho v \pdv{v}{x} = - \pdv{P}{x} + \mu \pdv{^2u}{x^2} + \mu \pdv{^2u}{y^2}\,,\\
+\rho u \pdv{u}{y} + \rho v \pdv{v}{y} = - \pdv{P}{y} + \mu \pdv{^2v}{x^2} + \mu \pdv{^2v}{y^2}\,.
+\end{cases}
+\label{eq:diffusionconvection}
+\end{equation}
+with the boundary conditions
+\begin{equation}
+\begin{cases}
+u(x, L_y) = 0\,, \\
+\pdv{^2u}{x^2} \big|_{(L_x, y)} = 0 \,, \\
+u(x, 0) = 0 \,, \\
+u(0, y) = \frac{\mathrm{Re} \mu}{\rho L_y} \,, \\
+v(x, L_y) = 0\,, \\
+v(L_x, y) = 0 \,, \\
+v(x, 0) = 0\,, \\
+v(0, y) = 0 \,,
+\end{cases}\,.
+\end{equation}
+
 \subsection{Solving methodology}
+
+Using the SIMPLE algorithm, the problem is solved in the following order:
+\begin{enumerate}
+	\item Explicitly fill the boundary conditions into the $u$ and $v$ solution vector in order to enforce them in all of the integrations that follow.
+	\item Guess a pressure field, $p^*$.
+	\item Use the guessed (or previously iterated) pressure field to obtain the velocity guesses, $u^*$ and $v^*$, as discussed in \ref{subsec:velocity-guess}.
+	\item Solve the pressure correction, $p'$, as discussed in \ref{subsec:pc-solve}.
+	\item Compute the velocity corrections, $u'$ and $v'$, and correct the velocity and pressure field, as discussed in \ref{subsec:correction}. 
+	\item Correct for the $u$-velocity outflow boundary condition.
+	\item Check for convergence. If not converged, return to 2.
+	\item Solve the auxiliary temperature until convergence.
+\end{enumerate}
 
 \subsection{Domain discretization}
 
 The domain of size $L_x \times L_y$ is discretized into $N_x \times N_y$ uniformly sized control volumes with $\Delta x = L_x / N_x$ and $\Delta y = L_y / N_y$. The numbering for all variables begins at the origin at $(i, j) = (0, 0)$. The maximum index for each variable, $\phi$, is defined as $(M_x^\phi, M_y^\phi)$.
+
+\begin{figure}[H]
+	\centering
+	\begin{tikzpicture}[scale=1, style={font=\scriptsize}]
+	\tikzset{dimen/.style={<->,>=latex,thin,every rectangle node/.style={fill=white,midway,font=\small}}}
+	
+	\filldraw[red!7] (0,0) -- (2,0) -- (2,2) -- (0, 2) -- cycle;
+	\draw (-1.5, 0) -- (3.5, 0);
+	\draw (-1.5, 2) -- (3.5, 2);
+	\draw (0, -1.5) -- (0, 3.5);
+	\draw (2, -1.5) -- (2, 3.5);
+	
+	\filldraw[red] (1, 1) circle (1.5pt);
+	\filldraw[blue] (0, 1) circle (1.5pt);
+	\filldraw[green!40!black] (1, 0) circle (1.5pt);
+	\filldraw[blue] (2, 1) circle (1.5pt);
+	\filldraw[green!40!black] (1, 2) circle (1.5pt);
+	\filldraw[red] (-1, 1) circle (1.5pt);
+	\filldraw[red] (3, 1) circle (1.5pt);
+	\filldraw[red] (1, 3) circle (1.5pt);
+	\filldraw[red] (1, -1) circle (1.5pt);
+	
+	\draw [->,blue] (0, 1) -- (0.5, 1);
+	\draw [->,blue] (2, 1) -- (2.5, 1);
+	\draw [->,green!40!black] (1, 0) -- (1,0.5);
+	\draw [->,green!40!black] (1, 2) -- (1,2.5);
+	
+	\node[below, red] at (1, 1) {$P_{i, j}$};
+	\node[below, red] at (3, 1) {$P_{i+1, j}$};
+	\node[below, red] at (-1, 1) {$P_{i-1, j}$};
+	\node[below, red] at (1, 3) {$P_{i, j+1}$};
+	\node[below, red] at (1, -1) {$P_{i, j-1}$};
+	
+	\node[above,blue] at (0.5, 1) {$u_{i-1,j}$};
+	\node[above,blue] at (2.5, 1) {$u_{i,j}$};
+	\node[below,green!40!black] at (1, 0) {$v_{i,j-1}$};
+	\node[below,green!40!black] at (1, 2) {$v_{i,j}$};
+	\end{tikzpicture}
+	\caption{An internal pressure control volume.}
+	\label{fig:CV-p}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\begin{tikzpicture}[scale=1, style={font=\scriptsize}]
+	\tikzset{dimen/.style={<->,>=latex,thin,every rectangle node/.style={fill=white,midway,font=\small}}}
+	
+	\filldraw[blue!7] (1,0) -- (3,0) -- (3,2) -- (1, 2) -- cycle;
+	\draw (-1, 0) -- (5, 0);
+	\draw (-1, 2) -- (5, 2);
+	\draw (0, -2) -- (0, 4);
+	\draw (2, -2) -- (2, 4);
+	\draw (4, -2) -- (4, 4);
+	
+	\filldraw[red] (1, 1) circle (1.5pt);
+	\filldraw[red] (3, 1) circle (1.5pt);
+	\filldraw[green!40!black] (1, 2) circle (1.5pt);
+	\filldraw[green!40!black] (1, 0) circle (1.5pt);
+	\filldraw[green!40!black] (3, 0) circle (1.5pt);
+	\filldraw[green!40!black] (3, 2) circle (1.5pt);
+	\filldraw[blue] (2, 1) circle (1.5pt);
+	\filldraw[blue] (4, 1) circle (1.5pt);
+	\filldraw[blue] (0, 1) circle (1.5pt);
+	\filldraw[blue] (2, 3) circle (1.5pt);
+	\filldraw[blue] (2, -1) circle (1.5pt);
+	
+	\draw [->,blue] (0, 1) -- (0.5, 1);
+	\draw [->,blue] (2, 1) -- (2.5, 1);
+	\draw [->,blue] (4, 1) -- (4.5, 1);
+	\draw [->,blue] (2, 3) -- (2.5, 3);
+	\draw [->,blue] (2, -1) -- (2.5, -1);
+	\draw [->,green!40!black] (1, 0) -- (1,0.5);
+	\draw [->,green!40!black] (1, 2) -- (1,2.5);
+	\draw [->,green!40!black] (3, 0) -- (3,0.5);
+	\draw [->,green!40!black] (3, 2) -- (3,2.5);
+	
+	\node[below, red] at (1, 1) {$P_{i, j}$};
+	\node[below, red] at (3, 1) {$P_{i+1, j}$};
+	
+	\node[above,blue] at (0.5, 1) {$u_{i-1,j}$};
+	\node[above,blue] at (2.5, 1) {$u_{i,j}$};
+	\node[above,blue] at (4.5, 1) {$u_{i+1,j}$};
+	\node[above,blue] at (2.5, 3) {$u_{i,j+1}$};
+	\node[above,blue] at (2.5, -1) {$u_{i,j-1}$};
+	\node[below,green!40!black] at (1, 0) {$v_{i,j-1}$};
+	\node[below,green!40!black] at (1, 2) {$v_{i,j}$};
+	\node[below,green!40!black] at (3, 0) {$v_{i+1,j-1}$};
+	\node[below,green!40!black] at (3, 2) {$v_{i+1,j}$};
+	\end{tikzpicture}
+	\caption{An internal $u$-velocity control volume.}
+	\label{fig:CV-u}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\begin{tikzpicture}[scale=1, style={font=\scriptsize}]
+	\tikzset{dimen/.style={<->,>=latex,thin,every rectangle node/.style={fill=white,midway,font=\small}}}
+	
+	\filldraw[green!40!black!7] (0,1) -- (2,1) -- (2,3) -- (0, 3) -- cycle;
+	\draw (-1.75, 0) -- (3.75, 0);
+	\draw (-1.75, 2) -- (3.75, 2);
+	\draw (-1.75, 4) -- (3.75, 4);
+	\draw (0, -1) -- (0, 5);
+	\draw (2, -1) -- (2, 5);
+	
+	\filldraw[red] (1, 1) circle (1.5pt);
+	\filldraw[red] (1, 3) circle (1.5pt);
+	\filldraw[blue] (0, 1) circle (1.5pt);
+	\filldraw[blue] (2, 1) circle (1.5pt);
+	\filldraw[blue] (0, 3) circle (1.5pt);
+	\filldraw[blue] (2, 3) circle (1.5pt);
+	\filldraw[green!40!black] (1, 0) circle (1.5pt);
+	\filldraw[green!40!black] (1, 2) circle (1.5pt);
+	\filldraw[green!40!black] (1, 4) circle (1.5pt);
+	\filldraw[green!40!black] (-1, 2) circle (1.5pt);
+	\filldraw[green!40!black] (3, 2) circle (1.5pt);
+	
+	\draw [->,blue] (0, 1) -- (0.5, 1);
+	\draw [->,blue] (2, 1) -- (2.5, 1);
+	\draw [->,blue] (0, 3) -- (0.5, 3);
+	\draw [->,blue] (2, 3) -- (2.5, 3);
+	\draw [->,green!40!black] (1, 0) -- (1,0.5);
+	\draw [->,green!40!black] (1, 2) -- (1,2.5);
+	\draw [->,green!40!black] (1, 4) -- (1, 4.5);
+	\draw [->,green!40!black] (-1, 2) -- (-1, 2.5);
+	\draw [->,green!40!black] (3, 2) -- (3, 2.5);
+	
+	\node[below, red] at (1, 1) {$P_{i, j}$};
+	\node[below, red] at (1, 3) {$P_{i, j+1}$};
+	\node[above,blue] at (0.5, 1) {$u_{i-1,j}$};
+	\node[above,blue] at (2.5, 1) {$u_{i,j}$};
+	\node[above,blue] at (0.65, 3) {$u_{i-1,j+1}$};
+	\node[above,blue] at (2.5, 3) {$u_{i,j+1}$};
+	\node[below,green!40!black] at (1, 2) {$v_{i,j}$};
+	\node[below,green!40!black] at (1, 0) {$v_{i,j-1}$};
+	\node[below,green!40!black] at (1, 4) {$v_{i,j+1}$};
+	\node[below,green!40!black] at (-1, 2) {$v_{i-1,j}$};
+	\node[below,green!40!black] at (3, 2) {$v_{i+1,j}$};
+	\end{tikzpicture}
+	\caption{An internal $v$-velocity control volume.}
+	\label{fig:CV-v}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\begin{tikzpicture}[scale=1, style={font=\scriptsize}]
+	\tikzset{dimen/.style={<->,>=latex,thin,every rectangle node/.style={fill=white,midway,font=\small}}}
+	
+	\filldraw[red!7] (0,0) -- (2,0) -- (2,2) -- (0, 2) -- cycle;
+	\draw (-1.5, 0) -- (3.5, 0);
+	\draw (-1.5, 2) -- (3.5, 2);
+	\draw (0, -1.5) -- (0, 3.5);
+	\draw (2, -1.5) -- (2, 3.5);
+	
+	\filldraw[red] (1, 1) circle (1.5pt);
+	\filldraw[blue] (0, 1) circle (1.5pt);
+	\filldraw[green!40!black] (1, 0) circle (1.5pt);
+	\filldraw[blue] (2, 1) circle (1.5pt);
+	\filldraw[green!40!black] (1, 2) circle (1.5pt);
+	\filldraw[red] (-1, 1) circle (1.5pt);
+	\filldraw[red] (3, 1) circle (1.5pt);
+	\filldraw[red] (1, 3) circle (1.5pt);
+	\filldraw[red] (1, -1) circle (1.5pt);
+	
+	\draw [->,blue] (0, 1) -- (0.5, 1);
+	\draw [->,blue] (2, 1) -- (2.5, 1);
+	\draw [->,green!40!black] (1, 0) -- (1,0.5);
+	\draw [->,green!40!black] (1, 2) -- (1,2.5);
+	
+	\node[below, red] at (1, 1) {$T_{i, j}$};
+	\node[below, red] at (3, 1) {$T_{i+1, j}$};
+	\node[below, red] at (-1, 1) {$T_{i-1, j}$};
+	\node[below, red] at (1, 3) {$T_{i, j+1}$};
+	\node[below, red] at (1, -1) {$T_{i, j-1}$};
+	
+	\node[above,blue] at (0.5, 1) {$u_{i-1,j}$};
+	\node[above,blue] at (2.5, 1) {$u_{i,j}$};
+	\node[below,green!40!black] at (1, 0) {$v_{i,j-1}$};
+	\node[below,green!40!black] at (1, 2) {$v_{i,j}$};
+	\end{tikzpicture}
+	\caption{An internal temperature control volume.}
+	\label{fig:CV-T}
+\end{figure}
+
+\subsection{Velocity guess}
+\label{subsec:velocity-guess}
+
+Define the Pechlet number on each boundary of a CV for variable $\phi$ centered at node $\phi_{i,j}$ as
+\begin{equation}
+P^{\phi_{i,j}}_\text{bd} = \frac{F^{\phi_{i,j}}_\text{bd}}{D^{\phi_{i,j}}_\text{bd}} \,, \quad \text{where} \quad \text{bd} = [n, e, s, w] \quad \text{and} \quad \phi = [u, v]\,.
+\end{equation}
+
+The integration of the $x$ and $y$-momentum equations (generalizing again with $\phi = [u, v]$) using the power-law scheme results in the equation (for $i = 1, \ldots, M_x^\phi - 1\,\,,\, j = 1, \ldots, M_y^\phi - 1$)
+\begin{subequations}
+	\label{eq:power}
+	\begin{align}
+	a^{\phi_{i,j}}_p \phi^*_{i,j} & = a^{\phi_{i,j}}_n \phi^*_{i, j+1} + a^{\phi_{i,j}}_e \phi^*_{i+1, j} + a^{\phi_{i,j}}_s \phi^*_{i, j-1} + a^{\phi_{i,j}}_w \phi^*_{i-1, j} + a_b^{\phi_{i,j}}\,,\\
+	a^{\phi_{i,j}}_n & = D^{\phi_{i,j}}_n \max \left[0, (1 - 0.1 |P^{\phi_{i,j}}_n|)^5\right] + \max \left[ -F^{\phi_{i,j}}_n, 0 \right]\,, \\
+	a^{\phi_{i,j}}_e & = D^{\phi_{i,j}}_e \max \left[0, (1 - 0.1 |P^{\phi_{i,j}}_e|)^5\right] + \max \left[ -F^{\phi_{i,j}}_e, 0 \right]\,, \\
+	a^{\phi_{i,j}}_s & = D^{\phi_{i,j}}_s \max \left[0, (1 - 0.1 |P^{\phi_{i,j}}_s|)^5\right] + \max \left[ F^{\phi_{i,j}}_s, 0 \right]\,, \\
+	a^{\phi_{i,j}}_w & = D^{\phi_{i,j}}_w \max \left[0, (1 - 0.1 |P^{\phi_{i,j}}_w|)^5\right] + \max \left[ F^{\phi_{i,j}}_w, 0 \right]\,, \\
+	a^{\phi_{i,j}}_p & = a^{\phi_{i,j}}_n + a^{\phi_{i,j}}_e + a^{\phi_{i,j}}_s + a^{\phi_{i,j}}_w\,, \\
+	a^{\phi_{i,j}}_b & = \begin{cases}
+	\Delta y (p^*_{i,j} - p^*_{i+1,j})\,, & \phi = u\\
+	\Delta x (p^*_{i,j} - p^*_{i, j+1})\,, & \phi = v
+	\end{cases}\,.
+	\end{align}
+\end{subequations}
+
+\subsubsection{$u$-velocity guess update}
+
+In all discussion that follow, we are considering a $u$-CV defined by the central node $u_{i,j}$. For simplicity we will define the width of each $u$-CV as
+\begin{equation}
+\Delta x^{u_{i,j}} = \begin{cases}
+\Delta x\,, & 1 < i < M_x^u - 1 \\
+\frac{3}{2} \Delta x\,, & \text{otherwise}
+\end{cases}\,,
+\end{equation}
+and we will also define the $y$-distance from $u_{i,j}$ to the north and south pressure interfaces, respectively, as
+\begin{subequations}
+	\begin{align}
+	\delta y^{u_{i,j}}_{p_n} & = \begin{cases}
+	\frac{1}{2} \Delta y\,, & j = M_y^u - 1\,, \\
+	\Delta y\,, & \text{otherwise}
+	\end{cases}\,, \\
+	\delta y^{u_{i,j}}_{p_s} & = \begin{cases}
+	\frac{1}{2} \Delta y\,, & j = 1\,, \\
+	\Delta y\,, & \text{otherwise}
+	\end{cases}\,.
+	\end{align}
+\end{subequations}
+The diffusion coefficients are then defined as
+\begin{subequations}
+	\begin{align}
+	D_n^{u_{i,j}} & = \frac{\mu \Delta x^{u_{i,j}}}{\delta y^{u_{i,j}}_{p_n}}\,,\\
+	D_e^{u_{i,j}} & = \frac{\mu\Delta y}{\Delta x}\,,\\
+	D_s^{u_{i,j}} & = \frac{\mu \Delta x^{u_{i,j}}}{\delta y^{u_{i,j}}_{p_s}}\,,\\
+	D_w^{u_{i,j}} & = \frac{\mu\Delta y}{\Delta x}\,.
+	\end{align}
+\end{subequations}
+Lastly, the flow rates are defined as
+\begin{subequations}
+	\begin{align}
+	F_n^{u_{i,j}} & = \rho \Delta x^{u_{i,j}} \begin{cases}
+	\frac{1}{6} \left(v^*_{0, j} + 3 v^*_{1, j} + 2 v^*_{2, j} \right)\,, & i = 1 \\
+	\frac{1}{6} \left(2 v^*_{i, j} + 3 v^*_{i + 1, j} + v^*_{i + 2, j} \right)\,, & i = M_x^u - 1 \\
+	\frac{1}{2} \left(v^*_{i, j} + v^*_{i + 1, j}\right)\,, & \text{otherwise} 
+	\end{cases}\,, \\
+	F_e^{u_{i,j}} & = \rho \Delta y \begin{cases}
+	u^*_{M_x^u, j}\,, & i = M_x^u - 1 \\
+	\frac{1}{2} \left(u^*_{i+1, j} + u^*_{i,j}\right)\,, & \text{otherwise}
+	\end{cases}\,, \\
+	F_s^{u_{i,j}} & = \rho \Delta x^{u_{i,j}} \begin{cases}
+	\frac{1}{6} \left(v^*_{0, j - 1} + 3 v^*_{1, j - 1} + 2 v^*_{2, j - 1} \right)\,, & i = 1 \\
+	\frac{1}{6} \left(2 v^*_{i, j - 1} + 3 v^*_{i + 1, j - 1} + v^*_{i + 2, j - 1} \right)\,, & i = M_x^u - 1 \\
+	\frac{1}{2} \left(v^*_{i, j - 1} + v^*_{i + 1, j - 1}\right)\,, & \text{otherwise} 
+	\end{cases} \\
+	F_w^{u_{i,j}} & = \rho \Delta y \begin{cases}
+	u^*_{0, j}\,, & i = 1 \\
+	\frac{1}{2} \left( u^*_{i - 1, j} + u^*_{i, j} \right)\,, & \text{otherwise}
+	\end{cases}\,.
+	\end{align}
+\end{subequations}
+
+\subsubsection{$v$-velocity guess update}
+
+Similarly, we will consider a $v$-CV defined by the central node $v_{i,j}$. The width of each $v$-CV is defined as
+\begin{equation}
+\Delta y^{v_{i,j}} = \begin{cases}
+\Delta y \,, & 1 < j < M_y^v - 1 \\
+\frac{3}{2} \Delta y \,, & \text{otherwise}
+\end{cases}\,,
+\end{equation}
+and we will also define the $x$-distance from $v_{i,j}$ to the east and west pressure interfaces, respectively, as
+\begin{subequations}
+	\begin{align}
+	\delta x^{v_{i,j}}_{p_e} & = \begin{cases}
+	\frac{1}{2} \Delta x\,, & i = M_x^v - 1 \\
+	\Delta x \,, & \text{otherwise}
+	\end{cases}\,, \\
+	\delta x^{v_{i,j}}_{p_w} & = \begin{cases}
+	\frac{1}{2} \Delta x\,, & i = 1\,, \\
+	\Delta x\,, & \text{otherwise}
+	\end{cases}\,.
+	\end{align}
+\end{subequations}
+The diffusion coefficients are then defined as
+\begin{subequations}
+	\begin{align}
+	D_n^{v_{i,j}} & = \frac{\mu \Delta x}{\Delta y}\,,\\
+	D_e^{v_{i,j}} & = \frac{\mu \Delta y^{v_{i,j}}}{\delta x^{v_{i,j}}_{p_e}}\,,\\
+	D_s^{v_{i,j}} & = \frac{\mu \Delta x}{\Delta y}\,,\\
+	D_w^{v_{i,j}} & = \frac{\mu\Delta y^{v_{i,j}}}{\delta x^{v_{i,j}}_{p_w}}\,.
+	\end{align}
+\end{subequations}
+Lastly, the flow rates are defined as
+\begin{subequations}
+	\begin{align}
+	F_n^{v_{i,j}} & = \rho \Delta x \begin{cases}
+	v^*_{i, M_y^v}\,, & j = M_y^v - 1 \\
+	\frac{1}{2} \left(v^*_{i, j+1} + v^*_{i,j}\right)\,, & \text{otherwise}
+	\end{cases}\,, \\
+	F_e^{v_{i,j}} & = \rho \Delta y^{v_{i,j}} \begin{cases}
+	\frac{1}{6} \left( u^*_{i, 0} + 3 u^*_{i, 1} + 2 u^*_{i, 2} \right)\,, & j = 1 \\
+	\frac{1}{6} \left( 2 u^*_{i, j} + 3 u^*_{i, j + 1} + 2 u^*_{i, j + 2} \right)\,, & j = M_y^v - 1 \\
+	\frac{1}{2} \left( u^*_{i, j} + u^*_{i, j + 1} \right)\,, & \text{otherwise} 
+	\end{cases}\,, \\
+	F_s^{v_{i,j}} & = \rho \Delta x \begin{cases}
+	v^*_{i, 0}\,, & j = 1 \\
+	\frac{1}{2} \left(v^*_{i, j+ 1} + v^*_{i,j}\right)\,, & \text{otherwise}
+	\end{cases}\,, \\
+	F_w^{v_{i,j}} & = \rho \Delta y^{v_{i,j}} \begin{cases}
+	\frac{1}{6} \left( u^*_{i - 1, 0} + 3 u^*_{i - 1, 1} + 2 u^*_{i - 1, 2} \right)\,, & j = 1 \\
+	\frac{1}{6} \left( 2 u^*_{i - 1, j} + 3 u^*_{i - 1, j + 1} + 2 u^*_{i - 1, j + 2} \right)\,, & j = M_y^v - 1 \\
+	\frac{1}{2} \left( u^*_{i - 1, j} + u^*_{i - 1, j + 1} \right)\,, & \text{otherwise} 
+	\end{cases}\,.
+	\end{align}
+\end{subequations}
+
+\subsection{Pressure correction solve}
+\label{subsec:pc-solve}
+
+At convergence, $u' = v' = p' = 0$, therefore it is irrelevant as to how we find them. Subtracting (exact - guessed) forms of Equation \eqref{eq:power} one obtains
+\begin{subequations}
+	\begin{align}
+	a^{u_{i,j}}_p u'_{i,j} & = a^{u_{i,j}}_n u'_{i, j+1} + a^{u_{i,j}}_e u'_{i+1, j} + a^{u_{i,j}}_s u'_{i, j-1} + a^{u_{i,j}}_w u'_{i-1, j} + \Delta y (p'_{i,j} - p'_{i+1,j}) \,, \\
+	a^{v_{i,j}}_p v'_{i,j} & = a^{v_{i,j}}_n v'_{i, j+1} + a^{v_{i,j}}_e v'_{i+1, j} + a^{v_{i,j}}_s v'_{i, j-1} + a^{v_{i,j}}_w v'_{i-1, j} + \Delta x (p'_{i,j} - p'_{i, j+1}) \,.
+	\end{align}
+\end{subequations}
+Drop the neighbor terms in the equations above (implying that velocity corrections are local) to obtain
+\begin{subequations}
+	\label{eq:velocity_corrector}
+	\begin{align}
+	u_{i,j}' & = \frac{\Delta y}{a_p^{u_{i,j}}} (p'_{i,j} - p'_{i+1,j})\,, \\
+	v_{i,j}' & = \frac{\Delta x}{a_p^{v_{i,j}}} (p'_{i,j} - p'_{i, j+1})\,.
+	\end{align}
+\end{subequations}
+Integrate the continuity equation over a $p$-CV defined by the central node $p_{i,j}$ and substitute $u = u^* + u'$, $v = v^* + v'$, and the above Equations to obtain
+\begin{subequations}
+	\label{eq:pc}
+	\begin{align}
+	a^{p'_{i,j}}_p p'_{i,j} & = a^{p'_{i,j}}_n p'_{i, j+1} + a^{p'_{i,j}}_e p'_{i+1, j} + a^{p'_{i,j}}_s p'_{i, j-1} + a^{p'_{i,j}}_w p'_{i-1, j} + a_b^{p'_{i,j}}\,,\\
+	a^{p'_{i,j}}_n & = \begin{cases}
+	\rho \Delta x^2 / a_p^{v_{i, j}}\,, & j < M_y^p - 1 \\
+	0\,, & \text{otherwise}
+	\end{cases}\,, \\
+	a^{p'_{i,j}}_e & = \begin{cases}
+	\rho \Delta y^2 / a_p^{u_{i, j}}\,, & i < M_x^p - 1 \\
+	0\,, & \text{otherwise}
+	\end{cases}\,, \\
+	a^{p'_{i,j}}_s & = \begin{cases}
+	\rho \Delta x^2 / a_p^{v_{i, j - 1}}\,, & j > 1 \\
+	0\,, & \text{otherwise}
+	\end{cases}\,, \\
+	a^{p'_{i,j}}_w & = \begin{cases}
+	\rho \Delta y^2 / a_p^{u_{i - 1, j}}\,, & i > 1 \\
+	0\,, & \text{otherwise}
+	\end{cases}\,, \\
+	a^{p'_{i,j}}_p & = a^{p'_{i,j}}_n + a^{p'_{i,j}}_e + a^{p'_{i,j}}_s + a^{p'_{i,j}}_w\,, \\
+	a^{p'_{i,j}}_b & = \rho \left(\Delta y (u_{i - 1, j}^* - u^*_{i,j}) + \Delta x(v^*_{i, j - 1} - v^*_{i,j})\right)\,.
+	\end{align}
+\end{subequations}
+
+\subsection{Velocity and pressure correction}
+\label{subsec:correction}
+
+Lastly, the velocities are then updated using Equation \eqref{eq:velocity_corrector} with
+\begin{subequations}
+	\begin{align}
+	u_{i,j} & = u_{i,j} + \frac{\Delta y}{a_p^{u_{i,j}}} (p'_{i,j} - p'_{i+1,j})\,,\quad i = 1, \ldots, M_x^u - 1\,, \quad j = 1, \ldots, M_y^u - 1\,, \\
+	v_{i,j} & = v_{i,j} + \frac{\Delta x}{a_p^{v_{i,j}}} (p'_{i,j} - p'_{i, j+1})\,,\quad i = 1, \ldots, M_x^v - 1\,, \quad j = 1, \ldots, M_y^v - 1\,,
+	\end{align}
+\end{subequations}
+and the pressures  (take note of the relaxation parameter $\alpha_p$) with
+\begin{equation}
+p_{i,j} = p_{i,j} + \alpha_p p'_{i,j} \,,\quad i = 1, \ldots, M_x^p - 1\,, \quad j = 1, \ldots, M_y^p - 1\,.
+\end{equation}
+
+\subsection{System solver}
+
+The systems in Equations  \eqref{eq:power} and \eqref{eq:pc} are solved using the line-by-line method with TDMA as the matrix solver. In this method, a tri-diagonal system is formed as the terms from one of the dimensions are lagged. Consider the simple system
+\begin{equation}
+a_p^{i,j} \phi_{i,j} = a_n^{i,j} \phi_{i,j+1} + a_e^{i,j} \phi_{i+1,j} + a_s^{i,j} \phi_{i,j-1} + a_w^{i,j} \phi_{i-1,j} + a_b^{i,j}\,, \quad i = 1, \ldots, N_x\,, \quad j = 1, \ldots, N_y\,.
+\end{equation}
+Now, consider $\phi^*$ to be a \textit{lagged} value of $\phi$, i.e., it is known and is moved to the right hand side of each equation. In solving a single physical column $i$ using the line-by-line method, the following system is solved:
+\begin{equation}
+a_p^{i,j} \phi_{i,j} = a_n^{i,j} \phi_{i,j+1} + a_e^{i,j} \phi^*_{i+1,j} + a_s^{i,j} \phi_{i,j-1} + a_w^{i,j} \phi^*_{i-1,j} + a_b^{i,j}\,, \quad \quad j = 1, \ldots, N_y\,.
+\end{equation}
+In solving a single physical row $j$ using the line-by-line method, the following system is solved:
+\begin{equation}
+a_p^{i,j} \phi_{i,j} = a_n^{i,j} \phi^*_{i,j+1} + a_e^{i,j} \phi_{i+1,j} + a_s^{i,j} \phi^*_{i,j-1} + a_w^{i,j} \phi_{i-1,j} + a_b^{i,j}\,, \quad \quad i = 1, \ldots, N_x\,.
+\end{equation}
 
 \section{Results}
 
@@ -98,17 +525,17 @@ The results requested for problem 3 follow in Tables \ref{table:coarse-u}, \ref{
 	\begin{tabular}{c|S|S|S|S|S|S|S}
 		& {1} & {2} & {3} & {4} & {5} & {6} & {7} \\
 		\hline
-		1 & 2.50927e-03 & 2.50927e-03 & 2.50927e-03 & 2.50927e-03 & 2.50927e-03 & 2.50927e-03 & 2.50927e-03 \\
-		2 & 0.00000e+00 & 1.44730e-03 & 3.04425e-03 & 3.56324e-03 & 3.04425e-03 & 1.44730e-03 & 0.00000e+00 \\
-		3 & 0.00000e+00 & 1.39756e-03 & 3.06604e-03 & 3.61913e-03 & 3.06604e-03 & 1.39756e-03 & 0.00000e+00 \\
-		4 & 0.00000e+00 & 1.39429e-03 & 3.06686e-03 & 3.62401e-03 & 3.06686e-03 & 1.39429e-03 & 0.00000e+00 \\
-		5 & 0.00000e+00 & 1.39406e-03 & 3.06688e-03 & 3.62445e-03 & 3.06688e-03 & 1.39406e-03 & 0.00000e+00 \\
-		6 & 0.00000e+00 & 1.39404e-03 & 3.06688e-03 & 3.62449e-03 & 3.06688e-03 & 1.39404e-03 & 0.00000e+00 \\
-		7 & 0.00000e+00 & 1.39404e-03 & 3.06688e-03 & 3.62449e-03 & 3.06688e-03 & 1.39404e-03 & 0.00000e+00 \\
-		8 & 0.00000e+00 & 1.39404e-03 & 3.06688e-03 & 3.62449e-03 & 3.06688e-03 & 1.39404e-03 & 0.00000e+00 \\
-		9 & 0.00000e+00 & 1.39404e-03 & 3.06688e-03 & 3.62449e-03 & 3.06688e-03 & 1.39404e-03 & 0.00000e+00 \\
-		10 & 0.00000e+00 & 1.39404e-03 & 3.06688e-03 & 3.62449e-03 & 3.06688e-03 & 1.39404e-03 & 0.00000e+00 \\
-		11 & 0.00000e+00 & 1.39404e-03 & 3.06688e-03 & 3.62449e-03 & 3.06688e-03 & 1.39404e-03 & 0.00000e+00 \\
+		1 & 5.06931e-03 & 5.06931e-03 & 5.06931e-03 & 5.06931e-03 & 5.06931e-03 & 5.06931e-03 & 5.06931e-03 \\
+		2 & 0.00000e+00 & 3.02156e-03 & 6.10805e-03 & 7.08733e-03 & 6.10805e-03 & 3.02156e-03 & 0.00000e+00 \\
+		3 & 0.00000e+00 & 2.84164e-03 & 6.18930e-03 & 7.28469e-03 & 6.18930e-03 & 2.84164e-03 & 0.00000e+00 \\
+		4 & 0.00000e+00 & 2.81967e-03 & 6.19551e-03 & 7.31618e-03 & 6.19551e-03 & 2.81967e-03 & 0.00000e+00 \\
+		5 & 0.00000e+00 & 2.81677e-03 & 6.19585e-03 & 7.32132e-03 & 6.19585e-03 & 2.81677e-03 & 0.00000e+00 \\
+		6 & 0.00000e+00 & 2.81636e-03 & 6.19583e-03 & 7.32217e-03 & 6.19583e-03 & 2.81636e-03 & 0.00000e+00 \\
+		7 & 0.00000e+00 & 2.81630e-03 & 6.19583e-03 & 7.32231e-03 & 6.19583e-03 & 2.81630e-03 & 0.00000e+00 \\
+		8 & 0.00000e+00 & 2.81629e-03 & 6.19582e-03 & 7.32233e-03 & 6.19582e-03 & 2.81629e-03 & 0.00000e+00 \\
+		9 & 0.00000e+00 & 2.81628e-03 & 6.19582e-03 & 7.32234e-03 & 6.19582e-03 & 2.81628e-03 & 0.00000e+00 \\
+		10 & 0.00000e+00 & 2.81628e-03 & 6.19582e-03 & 7.32234e-03 & 6.19582e-03 & 2.81628e-03 & 0.00000e+00 \\
+		11 & 0.00000e+00 & 2.81628e-03 & 6.19582e-03 & 7.32234e-03 & 6.19582e-03 & 2.81628e-03 & 0.00000e+00 \\
 	\end{tabular}
 	\label{table:coarse-u}
 \end{table}
@@ -123,16 +550,16 @@ The results requested for problem 3 follow in Tables \ref{table:coarse-u}, \ref{
 	\begin{tabular}{c|S|S|S|S|S|S|S}
 		& {1} & {2} & {3} & {4} & {5} & {6} & {7} \\
 		\hline
-		1 & 1.41200e-01 & 1.41200e-01 & 1.41190e-01 & 1.41187e-01 & 1.41190e-01 & 1.41200e-01 & 1.41200e-01 \\
-		2 & 1.41200e-01 & 1.41200e-01 & 1.41190e-01 & 1.41187e-01 & 1.41190e-01 & 1.41200e-01 & 1.41200e-01 \\
-		3 & 1.18832e-01 & 1.18832e-01 & 1.18832e-01 & 1.18833e-01 & 1.18832e-01 & 1.18832e-01 & 1.18832e-01 \\
-		4 & 1.04769e-01 & 1.04769e-01 & 1.04769e-01 & 1.04769e-01 & 1.04769e-01 & 1.04769e-01 & 1.04769e-01 \\
-		5 & 9.07942e-02 & 9.07942e-02 & 9.07942e-02 & 9.07942e-02 & 9.07942e-02 & 9.07942e-02 & 9.07942e-02 \\
-		6 & 7.68254e-02 & 7.68254e-02 & 7.68254e-02 & 7.68254e-02 & 7.68254e-02 & 7.68254e-02 & 7.68254e-02 \\
-		7 & 6.28571e-02 & 6.28571e-02 & 6.28571e-02 & 6.28571e-02 & 6.28571e-02 & 6.28571e-02 & 6.28571e-02 \\
-		8 & 4.88889e-02 & 4.88889e-02 & 4.88889e-02 & 4.88889e-02 & 4.88889e-02 & 4.88889e-02 & 4.88889e-02 \\
-		9 & 3.49206e-02 & 3.49206e-02 & 3.49206e-02 & 3.49206e-02 & 3.49206e-02 & 3.49206e-02 & 3.49206e-02 \\
-		10 & 2.09524e-02 & 2.09524e-02 & 2.09524e-02 & 2.09524e-02 & 2.09524e-02 & 2.09524e-02 & 2.09524e-02 \\
+		1 & 2.88374e-01 & 2.88374e-01 & 2.88353e-01 & 2.88346e-01 & 2.88353e-01 & 2.88374e-01 & 2.88374e-01 \\
+		2 & 2.88374e-01 & 2.88374e-01 & 2.88353e-01 & 2.88346e-01 & 2.88353e-01 & 2.88374e-01 & 2.88374e-01 \\
+		3 & 2.40648e-01 & 2.40648e-01 & 2.40651e-01 & 2.40653e-01 & 2.40651e-01 & 2.40648e-01 & 2.40648e-01 \\
+		4 & 2.11749e-01 & 2.11749e-01 & 2.11750e-01 & 2.11750e-01 & 2.11750e-01 & 2.11749e-01 & 2.11749e-01 \\
+		5 & 1.83440e-01 & 1.83440e-01 & 1.83440e-01 & 1.83440e-01 & 1.83440e-01 & 1.83440e-01 & 1.83440e-01 \\
+		6 & 1.55208e-01 & 1.55208e-01 & 1.55208e-01 & 1.55208e-01 & 1.55208e-01 & 1.55208e-01 & 1.55208e-01 \\
+		7 & 1.26987e-01 & 1.26987e-01 & 1.26987e-01 & 1.26987e-01 & 1.26987e-01 & 1.26987e-01 & 1.26987e-01 \\
+		8 & 9.87671e-02 & 9.87671e-02 & 9.87671e-02 & 9.87671e-02 & 9.87671e-02 & 9.87671e-02 & 9.87671e-02 \\
+		9 & 7.05479e-02 & 7.05479e-02 & 7.05479e-02 & 7.05479e-02 & 7.05479e-02 & 7.05479e-02 & 7.05479e-02 \\
+		10 & 4.23287e-02 & 4.23287e-02 & 4.23287e-02 & 4.23287e-02 & 4.23287e-02 & 4.23287e-02 & 4.23287e-02 \\
 		11 & 0.00000e+00 & 0.00000e+00 & 0.00000e+00 & 0.00000e+00 & 0.00000e+00 & 0.00000e+00 & 0.00000e+00 \\
 		12 & 0.00000e+00 & 0.00000e+00 & 0.00000e+00 & 0.00000e+00 & 0.00000e+00 & 0.00000e+00 & 0.00000e+00 \\
 	\end{tabular}
@@ -149,18 +576,18 @@ The results requested for problem 3 follow in Tables \ref{table:coarse-u}, \ref{
 	\begin{tabular}{c|S|S|S|S|S|S|S}
 		& {1} & {2} & {3} & {4} & {5} & {6} & {7} \\
 		\hline
-			1 & 26.64204 & 25.00000 & 25.00000 & 25.00000 & 25.00000 & 25.00000 & 26.64204 \\
-			2 & 28.47372 & 26.83169 & 25.80190 & 25.50210 & 25.80190 & 26.83169 & 28.47372 \\
-			3 & 30.21235 & 28.57032 & 26.64040 & 26.07996 & 26.64040 & 28.57032 & 30.21235 \\
-			4 & 31.50432 & 29.86229 & 27.56664 & 26.82629 & 27.56664 & 29.86229 & 31.50432 \\
-			5 & 32.60351 & 30.96148 & 28.51796 & 27.67470 & 28.51796 & 30.96148 & 32.60351 \\
-			6 & 33.62161 & 31.97957 & 29.47406 & 28.57704 & 29.47406 & 31.97957 & 33.62161 \\
-			7 & 34.60455 & 32.96252 & 30.43017 & 29.50634 & 30.43017 & 32.96252 & 34.60455 \\
-			8 & 35.57185 & 33.92982 & 31.38560 & 30.44874 & 31.38560 & 33.92982 & 35.57185 \\
-			9 & 36.53202 & 34.88999 & 32.34047 & 31.39739 & 32.34047 & 34.88999 & 36.53202 \\
-			10 & 37.48883 & 35.84679 & 33.29498 & 32.34898 & 33.29498 & 35.84679 & 37.48883 \\
-			11 & 38.44391 & 36.80187 & 34.24921 & 33.30189 & 34.24921 & 36.80187 & 38.44391 \\
-			12 & 39.39900 & 37.75696 & 35.20344 & 34.25481 & 35.20344 & 37.75696 & 39.39900 \\
+		1 & 26.64204 & 25.00000 & 25.00000 & 25.00000 & 25.00000 & 25.00000 & 26.64204 \\
+		2 & 27.69621 & 26.05418 & 25.36548 & 25.17769 & 25.36548 & 26.05418 & 27.69621 \\
+		3 & 28.84253 & 27.20050 & 25.72681 & 25.36877 & 25.72681 & 27.20050 & 28.84253 \\
+		4 & 29.72586 & 28.08382 & 26.15140 & 25.63232 & 26.15140 & 28.08382 & 29.72586 \\
+		5 & 30.44158 & 28.79955 & 26.60972 & 25.95974 & 26.60972 & 28.79955 & 30.44158 \\
+		6 & 31.06105 & 29.41902 & 27.08232 & 26.33547 & 27.08232 & 29.41902 & 31.06105 \\
+		7 & 31.62445 & 29.98241 & 27.56009 & 26.74529 & 27.56009 & 29.98241 & 31.62445 \\
+		8 & 32.15448 & 30.51244 & 28.03926 & 27.17831 & 28.03926 & 30.51244 & 32.15448 \\
+		9 & 32.66429 & 31.02226 & 28.51841 & 27.62677 & 28.51841 & 31.02226 & 32.66429 \\
+		10 & 33.16165 & 31.51962 & 28.99712 & 28.08535 & 28.99712 & 31.51962 & 33.16165 \\
+		11 & 33.65119 & 32.00915 & 29.47532 & 28.55050 & 29.47532 & 32.00915 & 33.65119 \\
+		12 & 34.14073 & 32.49869 & 29.95352 & 29.01564 & 29.95352 & 32.49869 & 34.14073 \\
 	\end{tabular}
 	\label{table:coarse-T}
 \end{table}

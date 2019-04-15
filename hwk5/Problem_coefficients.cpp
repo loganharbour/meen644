@@ -47,7 +47,7 @@ void
 Problem::TCoefficients()
 {
   Coefficients D, F;
-  
+
   for (unsigned int i = 1; i < T.Mx; ++i)
     for (unsigned int j = 1; j < T.My; ++j)
     {

@@ -55,7 +55,7 @@ void
 Problem::TBCCorrect()
 {
   for (unsigned int j = 0; j <= T.My; ++j)
-    T(T.Mx, j) = 2 * T(T.Mx - 1, j) - T(T.Mx - 2, j);
+    T(T.Mx, j) = (3 * T(T.Mx - 1, j) - T(T.Mx - 2, j)) / 2;
   for (unsigned int i = 0; i <= T.Mx; ++i)
   {
     T(i, 0) = T(i, 1) + q_top_bot * dy / (2 * k);

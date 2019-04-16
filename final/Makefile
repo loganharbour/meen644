@@ -8,4 +8,4 @@ final-opt: $(obj)
 
 .PHONY: clean
 clean:
-	rm -f $(obj) hwk-opt
+	rm -f $(obj) final-opt

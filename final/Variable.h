@@ -5,21 +5,12 @@
 #include "TriDiagonal.h"
 #include "Vector.h"
 
+#include <functional>
+
 namespace Flow2D
 {
 
 using namespace std;
-
-// Storage for boundary conditions
-struct BoundaryCondition
-{
-  BoundaryCondition() {}
-  BoundaryCondition(const double top, const double right, const double bottom, const double left)
-    : top(top), right(right), bottom(bottom), left(left)
-  {
-  }
-  double top = 0, right = 0, bottom = 0, left = 0;
-};
 
 // Storage for coefficients for a single CV
 struct Coefficients
@@ -68,16 +59,19 @@ struct Variable
   Variable(const Variables name,
            const unsigned int Nx,
            const unsigned int Ny,
+           const double dx,
+           const double dy,
            const double alpha,
-           const BoundaryCondition bc = BoundaryCondition())
+           function<double(const vector<double>)> ic = [](const vector<double> p) { return 0; })
     : name(name),
       string(VariableString(name)),
       Nx(Nx),
       Ny(Ny),
+      dx(dx),
+      dy(dy),
       Mx(Nx - 1),
       My(Ny - 1),
       w(1 / alpha),
-      bc(bc),
       a(Nx, Ny),
       phi(Nx, Ny),
       Ax(Nx - 2),
@@ -85,21 +79,45 @@ struct Variable
       bx(Nx - 2),
       by(Ny - 2)
   {
-    // Apply initial boundary conditions
-    if (bc.left != 0)
-      phi.setColumn(0, bc.left);
-    if (bc.right != 0)
-      phi.setColumn(Mx, bc.right);
-    if (bc.bottom != 0)
-      phi.setRow(0, bc.bottom);
-    if (bc.top != 0)
-      phi.setRow(My, bc.top);
+    for (unsigned int i = 0; i <= Mx; ++i)
+    {
+      phi(i, 0) = ic(point(i, 0));
+      phi(i, My) = ic(point(i, My));
+    }
+    for (unsigned int j = 0; j <= My; ++j)
+    {
+      phi(0, j) = ic(point(0, j));
+      phi(Mx, j) = ic(point(Mx, j));
+    }
   }
 
   // Constructor for an auxilary variable (no solver storage)
-  Variable(const Variables name, const unsigned int Nx, const unsigned int Ny)
-    : name(name), string(VariableString(name)), Nx(Nx), Ny(Ny), Mx(Nx - 1), My(Ny - 1), phi(Nx, Ny)
+  Variable(const Variables name,
+           const unsigned int Nx,
+           const unsigned int Ny,
+           const double dx,
+           const double dy,
+           function<double(const vector<double>)> ic = [](const vector<double> p) { return 0; })
+    : name(name),
+      string(VariableString(name)),
+      Nx(Nx),
+      Ny(Ny),
+      dx(dx),
+      dy(dy),
+      Mx(Nx - 1),
+      My(Ny - 1),
+      phi(Nx, Ny)
   {
+    for (unsigned int i = 0; i <= Mx; ++i)
+    {
+      phi(i, 0) = ic(point(i, 0));
+      phi(i, My) = ic(point(i, My));
+    }
+    for (unsigned int j = 0; j <= My; ++j)
+    {
+      phi(0, j) = ic(point(0, j));
+      phi(Mx, j) = ic(point(Mx, j));
+    }
   }
 
   // Solution matrix operations
@@ -112,6 +130,19 @@ struct Variable
   }
   void save(const string filename) const { phi.save(filename); }
   void reset() { phi = 0; }
+
+  // Get the point in space associated with an i, j for this CV
+  const vector<double> point(const unsigned int i, const unsigned int j) const
+  {
+    const double id = (double)i, jd = (double)j;
+    vector<double> pt = {dx * (i != 0) * (id - 0.5 * (1 + (i == Mx))),
+                         dy * (j != 0) * (jd - 0.5 * (1 + (j == My)))};
+    if (name == Variables::u)
+      pt[0] = id * dx;
+    if (name == Variables::v)
+      pt[1] = jd * dy;
+    return pt;
+  }
 
   // Coefficient debug
   void printCoefficients(const string prefix = "",
@@ -134,21 +165,21 @@ struct Variable
   const string string;
   // Variable size
   const unsigned int Nx, Ny;
+  // Mesh size
+  const double dx, dy;
   // Maximum variable index that is being solved
   const unsigned int Mx, My;
   // Relaxation coefficient used in solving linear systems
   const double w = 0;
-  // Boundary conditions
-  const BoundaryCondition bc = BoundaryCondition();
   // Matrix coefficients
   Matrix<Coefficients> a;
   // Variable solution
   Matrix<double> phi;
   // Linear system LHS for both sweep directions
-  TriDiagonal<double> Ax, Ay;
+  TriDiagonal Ax, Ay;
   // Linear system RHS for both sweep directions
   Vector<double> bx, by;
-};
+}; // namespace Flow2D
 
 } // namespace Flow2D
 #endif /* VARIABLE_H */

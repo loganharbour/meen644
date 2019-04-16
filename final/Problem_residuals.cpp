@@ -39,8 +39,8 @@ Problem::computeAuxResiduals()
        << aux_iterations << " aux iterations: ";
   cout << noshowpos << setprecision(1) << scientific;
   cout << "p = " << Rp;
+  cout << ", u = " << Ru;
   cout << ", v = " << Rv;
-  cout << ", p = " << Rp;
   cout << ", T = " << RT << endl;
 }
 
@@ -65,7 +65,7 @@ Problem::TResidual() const
       numer_temp = a.p * T(i, j);
       denom += abs(numer_temp);
       numer_temp -= a.n * T(i, j + 1) + a.e * T(i + 1, j);
-      numer_temp -= a.s * T(i, j - 1) + a.w * T(i - 1, j) + a.b;
+      numer_temp -= a.s * T(i, j - 1) + a.w * T(i - 1, j);
       numer += abs(numer_temp);
     }
   return numer / denom;

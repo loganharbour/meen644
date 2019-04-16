@@ -56,10 +56,11 @@ Problem::TBCCorrect()
 {
   for (unsigned int j = 0; j <= T.My; ++j)
     T(T.Mx, j) = (3 * T(T.Mx - 1, j) - T(T.Mx - 2, j)) / 2;
-  for (unsigned int i = 0; i <= T.Mx; ++i)
+
+  for (unsigned int i = 1; i < T.Mx; ++i)
   {
-    T(i, 0) = T(i, 1) + q_top_bot * dy / (2 * k);
-    T(i, T.My) = T(i, T.My - 1) + q_top_bot * dy / (2 * k);
+    T(i, 0) = T(i, 1) + q(T.point(i, 0)) * dy / (2 * k(i, 1).p);
+    T(i, T.My) = T(i, T.My - 1) + q(T.point(i, T.My)) * dy / (2 * k(i, T.My - 1).p);
   }
 }
 
@@ -77,9 +78,12 @@ Problem::uCorrect()
 void
 Problem::uBCCorrect()
 {
-  double m_out = 0;
-  for (unsigned int j = 0; j <= u.My; ++j)
+  double m_in = 0, m_out = 0;
+  for (unsigned int j = 1; j < u.My; ++j)
+  {
+    m_in += rho * dy * u(0, j);
     m_out += rho * dy * u(u.Mx - 1, j);
+  }
   for (unsigned int j = 0; j <= u.My; ++j)
     u(u.Mx, j) = m_in * u(u.Mx - 1, j) / m_out;
 

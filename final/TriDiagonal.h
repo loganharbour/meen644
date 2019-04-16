@@ -12,27 +12,26 @@ using namespace std;
  * Class that holds a tri-diagonal matrix and is able to perform TDMA in place
  * with a given RHS.
  */
-template <typename T>
 class TriDiagonal
 {
 public:
   TriDiagonal() {}
-  TriDiagonal(const unsigned int N, const T v = 0) : N(N), A(N, v), B(N, v), C(N - 1, v) {}
+  TriDiagonal(const unsigned int N, const double v = 0) : N(N), A(N, v), B(N, v), C(N - 1, v) {}
 
   // Setters for the top, middle, and bottom rows
-  void setTopRow(const T b, const T c)
+  void setTopRow(const double b, const double c)
   {
     B[0] = b;
     C[0] = c;
   }
-  void setMiddleRow(const unsigned int i, const T a, const T b, const T c)
+  void setMiddleRow(const unsigned int i, const double a, const double b, const double c)
   {
     assert(i < N - 1 && i != 0);
     A[i] = a;
     B[i] = b;
     C[i] = c;
   }
-  void setBottomRow(const T a, const T b)
+  void setBottomRow(const double a, const double b)
   {
     A[N - 1] = a;
     B[N - 1] = b;
@@ -70,11 +69,10 @@ public:
     f.close();
   }
 
-  // Solves the system Ax = d in place where d eventually stores the solution
-  void solveTDMA(Vector<T> & d)
+  void TDMA(Vector<double> & d)
   {
     // Forward sweep
-    T tmp = 0;
+    double tmp = 0;
     for (unsigned int i = 1; i < N; ++i)
     {
       tmp = A[i] / B[i - 1];
@@ -96,7 +94,7 @@ protected:
   unsigned int N = 0;
 
   // Left/main/right diagonal storage
-  vector<T> A, B, C;
+  vector<double> A, B, C;
 };
 
 #endif /* TRIDIAGONAL_H */

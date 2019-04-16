@@ -10,9 +10,9 @@ Problem::solveMain()
   if (debug)
     cout << endl << "Main iteration " << main_iterations << endl << endl;
 
-    solve(u);
-    solve(v);
-    solve(pc);
+  solve(u);
+  solve(v);
+  solve(pc);
 }
 
 void
@@ -117,7 +117,7 @@ Problem::sweepColumn(const unsigned int i, Variable & var)
   }
 
   // Solve
-  A.solveTDMA(b);
+  A.TDMA(b);
 
   if (debug)
     b.print("sol =", true);
@@ -166,7 +166,7 @@ Problem::sweepRow(const unsigned int j, Variable & var)
   }
 
   // Solve
-  A.solveTDMA(b);
+  A.TDMA(b);
 
   if (debug)
     b.print("sol =", true);

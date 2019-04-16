@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <ctime>
+#include <functional>
 #include <iomanip>
 #include <iostream>
 #include <map>
@@ -17,15 +18,15 @@ using namespace std;
 struct InputArguments
 {
   double Lx, Ly;
-  BoundaryCondition u_bc, v_bc;
-  double T_left, q_top_bot;
   double L_ref, u_ref;
-  double cp, k, mu, rho;
+  function<double(const vector<double>)> u_ic, v_ic, T_ic, q;
+  function<double(const vector<double>)> k, mu;
+  double cp, rho;
   bool debug = false;
   double alpha_p = 0.7;
-  double alpha_uv = 0.5;
-  unsigned int max_main_its = 50000;
-  unsigned int max_aux_its = 20000;
+  double alpha_uv = 0.4;
+  unsigned int max_main_its = 10000;
+  unsigned int max_aux_its = 1000;
   double tol = 1.0e-6;
 };
 
@@ -47,6 +48,10 @@ public:
   void save(const Variables var, const string filename) const { variables.at(var).save(filename); }
 
 private:
+  void fillMaterial(Matrix<Coefficients> & m,
+                    function<double(const vector<double> &)> func,
+                    const Variable & var);
+
   // Problem_corrections.cpp
   void correctMain();
   void correctAux();
@@ -94,14 +99,15 @@ protected:
 
   // Geometry [m]
   const double Lx, Ly, dx, dy;
-  // Material properties
-  const double cp, k, mu, rho;
+
+  // Non-constant material properties
+  Matrix<Coefficients> k, mu_u, mu_v;
+  // Constant material properties
+  const double rho, cp;
   // Residual references
   const double L_ref, u_ref;
-  // Other boundary conditions
-  const double q_top_bot;
-  // Mass inflow
-  const double m_in;
+  // Heat flux boundary condition
+  function<double(const vector<double>)> q;
 
   // Enable debug mode (printing extra output)
   const bool debug;

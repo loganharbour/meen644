@@ -46,16 +46,16 @@ Problem::pcCoefficients()
 void
 Problem::TCoefficients()
 {
-  Coefficients D, F;
-
   for (unsigned int i = 1; i < T.Mx; ++i)
     for (unsigned int j = 1; j < T.My; ++j)
     {
+      Coefficients D, F;
+
       // Diffusion coefficient
-      D.n = (j == T.My - 1 ? 2 * dx * k / dy : dx * k / dy);
-      D.e = (i == T.Mx - 1 ? 2 * dy * k / dx : dy * k / dx);
-      D.s = (j == 1 ? 2 * dx * k / dy : dx * k / dy);
-      D.w = (i == 1 ? 2 * dy * k / dx : dy * k / dx);
+      D.n = k(i, j).n * dx / dy * (j == T.My - 1 ? 2.0 : 1.0);
+      D.e = k(i, j).e * dy / dx * (i == T.Mx - 1 ? 2.0 : 1.0);
+      D.s = k(i, j).s * dx / dy * (j == 1 ? 2.0 : 1.0);
+      D.w = k(i, j).w * dy / dx * (i == 1 ? 2.0 : 1.0);
 
       // Heat flows
       F.n = dx * cp * rho * v(i, j);
@@ -71,95 +71,101 @@ Problem::TCoefficients()
 void
 Problem::uCoefficients()
 {
-  Coefficients D, F;
-  double W, dy_pn, dy_ps, b;
-
   for (unsigned int i = 1; i < u.Mx; ++i)
     for (unsigned int j = 1; j < u.My; ++j)
     {
+      Coefficients D, F;
+
       // Width of the cell
-      W = (i == 1 || i == u.Mx - 1 ? 3 * dx / 2 : dx);
+      const double W = dx * (i == 1 || i == u.Mx - 1 ? 1.5 : 1.0);
       // North/south distances to pressure nodes
-      dy_pn = (j == u.My - 1 ? dy / 2 : dy);
-      dy_ps = (j == 1 ? dy / 2 : dy);
+      const double dy_pn = dy * (j == u.My - 1 ? 0.5 : 1.0);
+      const double dy_ps = dy * (j == 1 ? 0.5 : 1.0);
 
       // Diffusion coefficients
-      D.n = mu * W / dy_pn;
-      D.e = mu * dy / dx;
-      D.s = mu * W / dy_ps;
-      D.w = mu * dy / dx;
+      D.n = mu_u(i, j).n * W / dy_pn;
+      D.e = mu_u(i, j).e * dy / dx;
+      D.s = mu_u(i, j).s * W / dy_ps;
+      D.w = mu_u(i, j).w * dy / dx;
 
       // East and west flows
-      F.e = (i == u.Mx - 1 ? rho * dy * u(u.Mx, j) : rho * dy * (u(i + 1, j) + u(i, j)) / 2);
-      F.w = (i == 1 ? rho * dy * u(0, j) : rho * dy * (u(i - 1, j) + u(i, j)) / 2);
+      F.e = rho * dy * (i == u.Mx - 1 ? u(u.Mx, j) : 0.5 * (u(i + 1, j) + u(i, j)));
+      F.w = rho * dy * (i == 1 ? u(0, j) : 0.5 * (u(i - 1, j) + u(i, j)));
+
       // North and south flows
       if (i == 1) // Left boundary
       {
-        F.n = rho * W * (v(0, j) + 3 * v(1, j) + 2 * v(2, j)) / 6;
-        F.s = rho * W * (v(0, j - 1) + 3 * v(1, j - 1) + 2 * v(2, j - 1)) / 6;
+        F.n = rho * W * (v(0, j) + 3.0 * v(1, j) + 2.0 * v(2, j)) / 6.0;
+        F.s = rho * W * (v(0, j - 1) + 3.0 * v(1, j - 1) + 2.0 * v(2, j - 1)) / 6.0;
       }
       else if (i == u.Mx - 1) // Right boundary
       {
-        F.n = rho * W * (2 * v(i, j) + 3 * v(i + 1, j) + v(i + 2, j)) / 6;
-        F.s = rho * W * (2 * v(i, j - 1) + 3 * v(i + 1, j - 1) + v(i + 2, j - 1)) / 6;
+        F.n = rho * W * (2.0 * v(i, j) + 3.0 * v(i + 1, j) + v(i + 2, j)) / 6.0;
+        F.s = rho * W * (2.0 * v(i, j - 1) + 3.0 * v(i + 1, j - 1) + v(i + 2, j - 1)) / 6.0;
       }
       else // Interior (not left or right boundary)
       {
-        F.n = rho * W * (v(i, j) + v(i + 1, j)) / 2;
-        F.s = rho * W * (v(i, j - 1) + v(i + 1, j - 1)) / 2;
+        F.n = rho * W * 0.5 * (v(i, j) + v(i + 1, j));
+        F.s = rho * W * 0.5 * (v(i, j - 1) + v(i + 1, j - 1));
       }
 
       // Pressure RHS
-      b = dy * (p(i, j) - p(i + 1, j));
+      const double b = dy * (p(i, j) - p(i + 1, j));
 
       // Compute and store power law coefficients
       fillPowerLaw(u.a(i, j), D, F, b);
+
+      // Explicitly set outflow condition
+      if (i == u.Mx - 1)
+      {
+        u.a(i, j).p -= u.a(i, j).e;
+        u.a(i, j).e = 0;
+      }
     }
 }
 
 void
 Problem::vCoefficients()
 {
-  Coefficients D, F;
-  double H, dx_pe, dx_pw, b;
-
   for (unsigned int i = 1; i < v.Mx; ++i)
     for (unsigned int j = 1; j < v.My; ++j)
     {
+      Coefficients D, F;
+
       // Height of the cell
-      H = (j == 1 || j == v.My - 1 ? 3 * dy / 2 : dy);
+      const double H = dy * (j == 1 || j == v.My - 1 ? 1.5 : 1.0);
       // East/west distances to pressure nodes
-      dx_pe = (i == v.Mx - 1 ? dx / 2 : dx);
-      dx_pw = (i == 1 ? dx / 2 : dx);
+      const double dx_pe = dx * (i == v.Mx - 1 ? 0.5 : 1.0);
+      const double dx_pw = dx * (i == 1 ? 0.5 : 1.0);
 
       // Diffusion coefficient
-      D.n = mu * dx / dy;
-      D.e = mu * H / dx_pe;
-      D.s = mu * dx / dy;
-      D.w = mu * H / dx_pw;
+      D.n = mu_v(i, j).n * dx / dy;
+      D.e = mu_v(i, j).e * H / dx_pe;
+      D.s = mu_v(i, j).s * dx / dy;
+      D.w = mu_v(i, j).w * H / dx_pw;
 
       // North and east flows
-      F.n = (j == v.My - 1 ? rho * dx * v(i, v.My) : rho * dx * (v(i, j + 1) + v(i, j)) / 2);
-      F.s = (j == 1 ? rho * dx * v(i, 0) : rho * dx * (v(i, j - 1) + v(i, j)) / 2);
+      F.n = rho * dx * (j == v.My - 1 ? v(i, v.My) : 0.5 * (v(i, j + 1) + v(i, j)));
+      F.s = rho * dx * (j == 1 ? v(i, 0) : 0.5 * (v(i, j - 1) + v(i, j)));
       // East and west flows
       if (j == 1) // Bottom boundary
       {
-        F.e = rho * H * (u(i, 0) + 3 * u(i, 1) + 2 * u(i, 2)) / 6;
-        F.w = rho * H * (u(i - 1, 0) + 3 * u(i - 1, 1) + 2 * u(i - 1, 2)) / 6;
+        F.e = rho * H * (u(i, 0) + 3.0 * u(i, 1) + 2.0 * u(i, 2)) / 6.0;
+        F.w = rho * H * (u(i - 1, 0) + 3.0 * u(i - 1, 1) + 2.0 * u(i - 1, 2)) / 6.0;
       }
       else if (j == v.My - 1) // Top boundary
       {
-        F.e = rho * H * (2 * u(i, j) + 3 * u(i, j + 1) + u(i, j + 2)) / 6;
-        F.w = rho * H * (2 * u(i - 1, j) + 3 * u(i - 1, j + 1) + u(i - 1, j + 2)) / 6;
+        F.e = rho * H * (2.0 * u(i, j) + 3.0 * u(i, j + 1) + u(i, j + 2)) / 6.0;
+        F.w = rho * H * (2.0 * u(i - 1, j) + 3.0 * u(i - 1, j + 1) + u(i - 1, j + 2)) / 6.0;
       }
       else // Interior (not top or bottom boundary)
       {
-        F.e = rho * H * (u(i, j) + u(i, j + 1)) / 2;
-        F.w = rho * H * (u(i - 1, j) + u(i - 1, j + 1)) / 2;
+        F.e = rho * H * 0.5 * (u(i, j) + u(i, j + 1));
+        F.w = rho * H * 0.5 * (u(i - 1, j) + u(i - 1, j + 1));
       }
 
       // Pressure RHS
-      b = dx * (p(i, j) - p(i, j + 1));
+      const double b = dx * (p(i, j) - p(i, j + 1));
 
       // Compute and store power law coefficients
       fillPowerLaw(v.a(i, j), D, F, b);

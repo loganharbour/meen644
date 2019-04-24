@@ -12,7 +12,7 @@ run(const double Re, const unsigned int Nx, const unsigned int Ny)
   const double k = 0.609;
   const double rho = 998.3;
   const double mu = 0.001002;
-  const double q_val = 16;
+  const double q_val = -64;
   const double Sx = 0.06;
   const double Sy = 0.5 * Ly;
   const double T_max = 1.5;

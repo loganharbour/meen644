@@ -57,9 +57,9 @@ for Ny in Ny_vals:
             T_bulk += rho * uT[i, j] * cp * T[Ny][i, j] * dy
         T_bulk /= T_bulk_denom
         T_bot, T_top = T[Ny][i, 0], T[Ny][i, Ny + 1]
-        Nu_bot[Ny].append(Ly * q / (k * (T_bot - T_bulk)))
+        Nu_bot[Ny].append(2 * Ly * q / (k * (T_bot - T_bulk)))
         if i > b / dx:
-            Nu_top[Ny].append(Ly * q / k * (T_top - T_bulk))
+            Nu_top[Ny].append(2 * Ly * q / (k * (T_top - T_bulk)))
 
 print('Problem 2 reattachment (160xNy grid, Re = 200):')
 print('  (Ny: xr):', xr)
@@ -73,7 +73,7 @@ fig.set_figheight(3)
 for x in (Ly * np.array([6, 12, 24]) + b):
     i_mid = x / dx + 0.5
     i_min, i_max = int(np.floor(i_mid)), int(np.ceil(i_mid))
-    ax.plot(T_y, (T[90][i_min, :] + T[90][i_max, :]) / 2, label='x = {:.2f} m'.format(x), linewidth=1)
+    ax.plot(T_y, (T[90][i_min, :] + T[90][i_max, :]) / 2, label='$x$ = {:.2f} m'.format(x), linewidth=1)
 plt.xlabel('$y$ (m)')
 plt.ylabel('$T(x, y)$')
 plt.legend()

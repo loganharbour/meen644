@@ -14,6 +14,9 @@ rho = 998.3
 k = 0.609
 cp = 4183
 mu = 0.001002
+h = Ly / 2
+
+x_r = lambda Re: (2.13 + 0.021 * Re) * h
 
 ###############################################################################
 # Problem 1
@@ -62,7 +65,10 @@ for Ny in Ny_vals:
             Nu_top[Ny].append(2 * Ly * q / (k * (T_top - T_bulk)))
 
 print('Problem 2 reattachment (160xNy grid, Re = 200):')
-print('  (Ny: xr):', xr)
+for Ny, val in xr.items():
+    exp = x_r(200)
+    err = (val - exp) / exp * 100
+    print('  Ny = {}, x_r = {:.4f}, exp = {:.4f}, err = {:.2f}%'.format(Ny, val, exp, err))
 
 # Problem 1a
 dy = Ly / 90
@@ -149,7 +155,10 @@ for Re in Re_vals:
             xr[Re] = i * dx - (u_top[i] / m) - b
             break
 print('Problem 2 reattachment (160x70 grid):')
-print('  (Re: xr):', xr)
+for Re, val in xr.items():
+    exp = x_r(Re)
+    err = (val - exp) / exp * 100
+    print('  Re = {}, x_r = {:.4f}, exp = {:.4f}, err = {:.2f}%'.format(Re, val, exp, err))
 
 u_y = np.hstack((0, (np.linspace(dy / 2, Ly - dy / 2, num = len(u_cut[Re][x]) - 2)), Ly))
 v_y = np.linspace(0, Ly, num=len(v_cut[Re][x]))

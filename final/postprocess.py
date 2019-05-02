@@ -31,13 +31,6 @@ for Ny in Ny_vals:
     dy = Ly / Ny
     u = np.loadtxt('results/Re200_Nx160_Ny{}_u.csv'.format(Ny), delimiter=',').T
     T[Ny] = np.loadtxt('results/Re200_Nx160_Ny{}_T.csv'.format(Ny), delimiter=',').T
-    # Reattachment lengths
-    u_top = u[:, Ny]
-    for i in range(int(np.floor(b / dx)) + 1, Nx):
-        if u_top[i] > 0:
-            m = (u_top[i] - u_top[i - 1]) / dx
-            xr[Ny] = i * dx - (u_top[i] / m) - b
-            break
     # u at T points
     uT = np.zeros(T[Ny].shape)
     for i in range(1, T[Ny].shape[0] - 1):
@@ -51,7 +44,6 @@ for Ny in Ny_vals:
     T_bulk_denom = 0
     for j in range(u.shape[1]):
         T_bulk_denom += cp * dy * u[0, j] * rho
-        # T_bulk_denom += cp * dy * uleft * rho
     for i in range(T[Ny].shape[0]):
         T_bulk = 0
         for j in range(1, T[Ny].shape[1] - 1):
@@ -63,8 +55,15 @@ for Ny in Ny_vals:
         Nu_bot[Ny].append(2 * Ly * q / (k * (T_bot - T_bulk)))
         if i > b / dx:
             Nu_top[Ny].append(2 * Ly * q / (k * (T_top - T_bulk)))
+    # Reattachment lengths
+    u_top = uT[:, Ny]
+    for i in range(int(np.floor(b / dx)) + 1, Nx):
+        if u_top[i] > 0:
+            m = (u_top[i] - u_top[i - 1]) / dx
+            xr[Ny] = i * dx - (u_top[i] / m) - b
+            break
 
-print('Problem 2 reattachment (160xNy grid, Re = 200):')
+print('Problem 1 reattachment (160xNy grid, Re = 200):')
 for Ny, val in xr.items():
     exp = x_r(200)
     err = (val - exp) / exp * 100
@@ -102,6 +101,10 @@ plt.grid()
 plt.tight_layout()
 fig.savefig('results/1b_Twall.pdf')
 
+# Problem 1b final values
+print('Problem 1b bottom wall final: {:.3f}'.format(T[90][-1, 0]))
+print('Problem 1b top wall final: {:.3f}'.format(T[90][-1, -1]))
+
 # Problem 1c
 fig, ax = plt.subplots(1, 2)
 fig.set_figwidth(8)
@@ -124,6 +127,10 @@ lgd = ax[0].legend(handles, labels, loc='lower center', bbox_to_anchor=(1.0, -0.
 fig.tight_layout()
 fig.savefig('results/1c_Nu.pdf', bbox_inches='tight', bbox_extra_artists=(lgd,))
 
+# Problem 1c final values
+print('Problem 1c bottom Nu(Ny = 90) final: {:.3f}'.format(Nu_bot[90][-1]))
+print('Problem 1c top Nu(Ny = 90) final: {:.3f}'.format(Nu_top[90][-1]))
+
 ###############################################################################
 # Problem 2
 
@@ -138,6 +145,7 @@ u_cut, v_cut = {}, {}
 for Re in Re_vals:
     u = np.loadtxt('results/Re{}_Nx160_Ny70_u.csv'.format(Re), delimiter=',').T
     v = np.loadtxt('results/Re{}_Nx160_Ny70_v.csv'.format(Re), delimiter=',').T
+    T = np.loadtxt('results/Re{}_Nx160_Ny70_T.csv'.format(Re), delimiter=',').T
     # Cut along various xcome
     u_cut[Re], v_cut[Re] = {}, {}
     for x in x_vals:
@@ -147,8 +155,15 @@ for Re in Re_vals:
         v_i_min, v_i_max = int(np.ceil(v_i)), int(np.ceil(v_i))
         u_cut[Re][x] = (u[u_i_min, :] + u[u_i_min, :]) / 2
         v_cut[Re][x] = (v[u_i_min, :] + v[u_i_min, :]) / 2
+    # u at T points
+    uT = np.zeros(T.shape)
+    for i in range(1, T.shape[0] - 1):
+        for j in range(u.shape[1]):
+            uT[0, j] = u[0, j]
+            uT[u.shape[0], j] = u[u.shape[0] - 1, j]
+            uT[i, j] = (u[i - 1, j] + u[i, j]) / 2
     # Reattachment length
-    u_top = u[:, Ny]
+    u_top = uT[:, Ny]
     for i in range(int(np.floor(b / dx)) + 1, Nx):
         if u_top[i] > 0:
             m = (u_top[i] - u_top[i - 1]) / dx
